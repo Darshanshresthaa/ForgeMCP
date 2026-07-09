@@ -1,18 +1,19 @@
 from fastmcp import FastMCP
-import requests
-import os
-from dotenv import load_dotenv
+from MCP.Tools.github_client import github_get
 
-load_dotenv()
+mcp = FastMCP("ForgeMCP")
 
-TOKEN = os.getenv("GITHUB_TOKEN")
+@mcp.tool
+def get_profile(username: str):
 
-HEADERS = {}
+    try:
+        profile = github_get(f"/users/{username}")
 
-if TOKEN:
-    HEADERS["Authorization"] = f"Bearer {TOKEN}"
+        return profile
 
+    except ValueError:
+        raise
 
-GITHUB_API = "https://api.github.com"
-
-
+    except Exception as e:
+        raise RuntimeError(f"Failed to fetch profile for : '{username}'.")
+    
