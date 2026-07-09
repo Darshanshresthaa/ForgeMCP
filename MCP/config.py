@@ -14,3 +14,4 @@ if GITHUB_TOKEN:
     HEADERS["Authorization"] = f"Bearer {GITHUB_TOKEN}"
 
 GITHUB_API = "https://api.github.com"
+

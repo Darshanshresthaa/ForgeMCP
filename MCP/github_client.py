@@ -1,6 +1,6 @@
 import requests
 
-from MCP.Tools.config import GITHUB_API,HEADERS
+from MCP.config import GITHUB_API,HEADERS
 def github_get(endpoint: str, params=None):
     try:
 
