@@ -20,3 +20,36 @@ def github_get(endpoint: str, params=None):
 
     except requests.exceptions.RequestException as e:
         raise RuntimeError(e)
+
+
+
+
+def github_put(endpoint: str, json: dict):
+    """
+    Send PUT request to GitHub API.
+    """
+
+    url = f"{GITHUB_API}{endpoint}"
+
+
+    headers = {
+        "Authorization": f"Bearer {HEADERS}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28"
+    }
+
+
+    response = requests.put(
+        url,
+        headers=headers,
+        json=json
+    )
+
+
+    if response.status_code not in [200, 201]:
+        raise Exception(
+            f"GitHub API Error {response.status_code}: {response.text}"
+        )
+
+
+    return response.json()
