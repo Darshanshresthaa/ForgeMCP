@@ -1,8 +1,7 @@
 from fastmcp import FastMCP
 from MCP.github_client import github_get
+from MCP.server import mcp
 
-
-mcp = FastMCP("ForgeMCP")
 @mcp.tool
 def list_releases(username: str, repo_name: str, limit: int = 10):
     """List repository releases."""

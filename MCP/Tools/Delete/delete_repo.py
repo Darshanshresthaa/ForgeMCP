@@ -1,7 +1,7 @@
 from fastmcp import FastMCP
 from MCP.github_client import git_delete
 
-mcp = FastMCP("ForgeMCP")
+from MCP.server import mcp
 
 
 @mcp.tool

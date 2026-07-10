@@ -1,8 +1,7 @@
 from fastmcp import FastMCP
 from MCP.github_client import github_get,git_delete
 
-
-mcp = FastMCP("ForgeMCP")
+from MCP.server import mcp
 
 @mcp.tool
 def delete_file(

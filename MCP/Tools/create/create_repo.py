@@ -1,9 +1,7 @@
 from fastmcp import FastMCP
 from MCP.github_client import github_post
 import base64
-
-
-mcp = FastMCP("ForgeMCP")
+from MCP.server import mcp
 
 
 

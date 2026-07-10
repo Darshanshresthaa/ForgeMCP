@@ -1,9 +1,7 @@
 from fastmcp import FastMCP
 from MCP.github_client import github_get
 
-
-mcp = FastMCP("ForgeMCP")
-
+from MCP.server import mcp
 @mcp.tool
 def search_repos(query: str,limit:int=10):
     """Search GitHub users by username or keyword."""

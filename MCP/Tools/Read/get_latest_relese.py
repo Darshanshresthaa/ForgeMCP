@@ -1,8 +1,8 @@
 from fastmcp import FastMCP
 from MCP.github_client import github_get
 
+from MCP.server import mcp
 
-mcp = FastMCP("ForgeMCP")
 @mcp.tool
 def get_latest_release(username: str, repo_name: str):
     """Get the latest repository release."""
