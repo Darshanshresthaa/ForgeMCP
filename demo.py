@@ -1,6 +1,7 @@
-from dotenv import load_dotenv
-import os
+from fastmcp import FastMCP
+from MCP.Tools import *
 
-load_dotenv()
+mcp = FastMCP("ForgeMCP")
 
-print(os.getenv("GITHUB_TOKEN"))
+if __name__ == "__main__":
+    mcp.run()

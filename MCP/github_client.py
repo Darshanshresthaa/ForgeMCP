@@ -1,6 +1,8 @@
 import requests
 
-from MCP.config import GITHUB_API,HEADERS
+from MCP.config import GITHUB_API, HEADERS, GITHUB_TOKEN
+
+
 def github_get(endpoint: str, params=None):
     try:
 
@@ -33,7 +35,7 @@ def github_put(endpoint: str, json: dict):
 
 
     headers = {
-        "Authorization": f"Bearer {HEADERS}",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28"
     }
@@ -56,14 +58,14 @@ def github_put(endpoint: str, json: dict):
 
 def github_post(endpoint: str, json: dict):
     """
-    Send PUT request to GitHub API.
+    Send POST request to GitHub API.
     """
 
     url = f"{GITHUB_API}{endpoint}"
 
 
     headers = {
-        "Authorization": f"Bearer {HEADERS}",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28"
     }
@@ -90,7 +92,7 @@ def git_delete(endpoint: str):
     url = f"{GITHUB_API}{endpoint}"
 
     headers = {
-        "Authorization": f"Bearer {HEADERS}",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
     }
