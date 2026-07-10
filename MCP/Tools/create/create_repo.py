@@ -1,5 +1,5 @@
 from fastmcp import FastMCP
-from MCP.github_client import github_put
+from MCP.github_client import github_post
 import base64
 
 

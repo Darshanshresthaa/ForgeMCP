@@ -1,5 +1,7 @@
 from fastmcp import FastMCP
 import subprocess
+import os
+
 mcp = FastMCP("ForgeMCP")
 
 

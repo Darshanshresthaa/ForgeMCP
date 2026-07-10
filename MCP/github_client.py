@@ -87,10 +87,10 @@ def github_post(endpoint: str, json: dict):
 
 def git_delete(endpoint: str):
 
-    url = f"{GITHUB_API_URL}{endpoint}"
+    url = f"{GITHUB_API}{endpoint}"
 
     headers = {
-        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Authorization": f"Bearer {HEADERS}",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
     }
