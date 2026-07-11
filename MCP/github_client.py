@@ -87,7 +87,7 @@ def github_post(endpoint: str, json: dict):
     return response.json()
 
 
-def git_delete(endpoint: str):
+def git_delete(endpoint: str, json: dict = None):
 
     url = f"{GITHUB_API}{endpoint}"
 
@@ -100,11 +100,38 @@ def git_delete(endpoint: str):
     response = requests.delete(
         url,
         headers=headers,
+        json=json,
     )
 
-    if response.status_code != 204:
+    if response.status_code not in (200, 204):
         raise Exception(
             f"GitHub API Error {response.status_code}: {response.text}"
         )
 
-    return {"status": "success"}
+    if response.status_code == 204 or not response.content:
+        return {"status": "success"}
+
+    return response.json()
+
+def github_patch(endpoint: str, payload: dict):
+
+    url = f"{GITHUB_API}{endpoint}"
+
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+
+    response = requests.patch(
+        url,
+        headers=headers,
+        json=payload,
+    )
+
+    if response.status_code not in [200, 201]:
+        raise Exception(
+            f"GitHub API Error {response.status_code}: {response.text}"
+        )
+
+    return response.json()
