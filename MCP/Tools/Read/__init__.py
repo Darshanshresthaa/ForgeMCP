@@ -11,6 +11,7 @@ from .getcommit import *
 from .list_commit import *
 
 from .list_release import *
+from .list_repository import *
 from .list_tags import *
 from .list_watches import *
 from .repo_contributers import *
