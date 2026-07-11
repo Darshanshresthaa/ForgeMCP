@@ -11,6 +11,8 @@ def list_pull_requests(
     base: str | None = None,
     sort: str = "created",
     direction: str = "desc",
+    page:int=1,
+    per_page:int=35
 ):
     """
     List pull requests in a GitHub repository.
@@ -23,6 +25,8 @@ def list_pull_requests(
         "state": state,
         "sort": sort,
         "direction": direction,
+        "page":page,
+        "per_page":per_page
     }
 
     if base:
