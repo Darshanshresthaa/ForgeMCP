@@ -1,6 +1,6 @@
 from .create_pr import *
 from .getpull_reqyest import *
-from .lis_pull_request_review import *
+from .list_pull_request_review import *
 from .list_pull_request import *
 from .list_pull_request_commit import *
 from .list_pull_request_file import *

@@ -42,7 +42,4 @@ def list_pull_request_files(
         }
 
     except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e),
-        }
+        raise RuntimeError(f"Failed to list files for pull request #{pull_request_number}: {e}") from e
