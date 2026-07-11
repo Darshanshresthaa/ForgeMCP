@@ -34,13 +34,7 @@ def clone_repository(
         }
 
     except subprocess.CalledProcessError as e:
-        return {
-            "status": "error",
-            "message": e.stderr.strip(),
-        }
+        raise RuntimeError(f"Failed to clone repository: {e.stderr.strip()}") from e
 
     except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e),
-        }
+        raise RuntimeError(f"Failed to clone repository: {e}") from e

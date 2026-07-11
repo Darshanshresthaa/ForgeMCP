@@ -28,7 +28,4 @@ def delete_repository(
         }
 
     except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e),
-        }
+        raise RuntimeError(f"Failed to delete repository '{username}/{repo_name}': {e}") from e

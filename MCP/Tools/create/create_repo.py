@@ -39,7 +39,4 @@ def create_repository(
         }
 
     except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e)
-        }
+        raise RuntimeError(f"Failed to create repository '{repo_name}': {e}") from e

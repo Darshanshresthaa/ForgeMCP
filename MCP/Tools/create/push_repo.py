@@ -33,10 +33,10 @@ def push_local_to_github(
     """
 
     if not GITHUB_TOKEN:
-        return {"status": "error", "message": "GITHUB_TOKEN is not set in .env"}
+        raise RuntimeError("GITHUB_TOKEN is not set in .env")
 
     if not os.path.isdir(local_path):
-        return {"status": "error", "message": f"Local path not found: {local_path}"}
+        raise ValueError(f"Local path not found: {local_path}")
 
     repo_existed = True
     try:
@@ -44,7 +44,7 @@ def push_local_to_github(
     except ValueError:
         repo_existed = False
     except Exception as e:
-        return {"status": "error", "message": f"Failed to check repository: {e}"}
+        raise RuntimeError(f"Failed to check repository: {e}") from e
 
     if not repo_existed:
         try:
@@ -58,7 +58,7 @@ def push_local_to_github(
                 },
             )
         except Exception as e:
-            return {"status": "error", "message": f"Failed to create repository: {e}"}
+            raise RuntimeError(f"Failed to create repository: {e}") from e
 
     remote_url = f"https://github.com/{username}/{repo_name}.git"
   
@@ -89,7 +89,7 @@ def push_local_to_github(
         )
 
     except RuntimeError as e:
-        return {"status": "error", "message": str(e)}
+        raise RuntimeError(f"Git operation failed: {e}") from e
 
     return {
         "status": "success",

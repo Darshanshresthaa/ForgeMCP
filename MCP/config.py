@@ -4,6 +4,7 @@ import os
 load_dotenv()
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+MCP_AUTH_TOKEN = os.getenv("MCP_AUTH_TOKEN")
 
 HEADERS = {
     "Accept": "application/vnd.github+json",

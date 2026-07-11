@@ -83,7 +83,4 @@ def get_repository_code(username: str,repo_name: str,folder_path: str = None,bra
 
 
     except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e)
-        }
+        raise RuntimeError(f"Failed to fetch repository code for '{username}/{repo_name}': {e}") from e

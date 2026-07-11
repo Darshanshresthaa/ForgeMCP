@@ -42,7 +42,4 @@ def create_file(username: str,repo_name: str,path: str,content: str,message: str
 
 
     except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e)
-        }
+        raise RuntimeError(f"Failed to create file '{path}': {e}") from e

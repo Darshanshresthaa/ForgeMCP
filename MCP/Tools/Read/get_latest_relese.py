@@ -19,7 +19,10 @@ def get_latest_release(username: str, repo_name: str):
             "url": release.get("html_url") or "Not available",
         }
 
-    except Exception:
+    except ValueError:
         return {
             "message": "No published release found for this repository."
         }
+
+    except Exception as ex:
+        raise RuntimeError(f"Failed to get latest release: {ex}")
