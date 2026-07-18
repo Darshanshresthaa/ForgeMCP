@@ -6,7 +6,7 @@ from MCP.config import MCP_AUTH_TOKEN
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    host = os.environ.get("MCP_HOST", "127.0.0.1")
+    host = os.environ.get("MCP_HOST", "0.0.0.0")
 
     exposed_to_network = host not in ("127.0.0.1", "localhost")
 
