@@ -3,6 +3,8 @@ from fastmcp.server.auth.providers.jwt import StaticTokenVerifier
 
 from MCP.config import MCP_AUTH_TOKEN
 
+
+
 _auth = None
 
 if MCP_AUTH_TOKEN:
