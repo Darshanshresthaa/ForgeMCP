@@ -1,3 +1,4 @@
+from langchain_mcp_adapters.client import MultiServerMCPClient
 
 SERVERS = {
     "ForgeMCP": {
@@ -8,3 +9,9 @@ SERVERS = {
         }
     }
 }
+
+
+async def get_mcp_tools():
+    client = MultiServerMCPClient(SERVERS)
+    tools = await client.get_tools()
+    return tools
