@@ -52,7 +52,6 @@ def _request_with_retry(method: str, endpoint: str, headers: dict, params=None, 
             remaining = response.headers.get("X-RateLimit-Remaining")
             retry_after = response.headers.get("Retry-After")
 
-            # Primary rate limit exhausted
             if remaining == "0":
                 reset_ts = response.headers.get("X-RateLimit-Reset")
                 wait_seconds = BASE_BACKOFF_SECONDS * (2 ** attempt)
@@ -67,7 +66,6 @@ def _request_with_retry(method: str, endpoint: str, headers: dict, params=None, 
                 time.sleep(wait_seconds)
                 continue
 
-            # Secondary rate limit (abuse detection)
             if retry_after:
                 wait_seconds = min(float(retry_after), MAX_RATE_LIMIT_WAIT_SECONDS)
                 if attempt == MAX_RETRIES:
@@ -75,7 +73,6 @@ def _request_with_retry(method: str, endpoint: str, headers: dict, params=None, 
                 time.sleep(wait_seconds)
                 continue
 
-        # Transient server-side errors: retry
         if response.status_code in (500, 502, 503, 504):
             if attempt < MAX_RETRIES:
                 time.sleep(BASE_BACKOFF_SECONDS * (2 ** attempt))
@@ -83,7 +80,6 @@ def _request_with_retry(method: str, endpoint: str, headers: dict, params=None, 
 
         return response
 
-    # Only reached if every attempt hit a network error and MAX_RETRIES == 0
     raise RuntimeError(f"Network error calling GitHub API: {last_network_error}")
 
 
