@@ -13,6 +13,7 @@ def list_repositories(username: str):
 
         repositories = []
 
+
         for repo in repos:
             repositories.append({
                 "name": repo["name"],
@@ -34,7 +35,6 @@ def list_repositories(username: str):
 
         return repositories
     
-
     except ValueError:
         raise
 
