@@ -2,7 +2,7 @@ from fastmcp import FastMCP
 from MCP.github_client import github_get
 from MCP.server import mcp
 
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def get_repository(

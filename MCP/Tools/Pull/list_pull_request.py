@@ -3,7 +3,7 @@ from MCP.github_client import github_get
 
 from MCP.server import mcp
 
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def list_pull_requests(
@@ -16,7 +16,9 @@ def list_pull_requests(
     page:int=1,
     per_page:int=35
 ):
-    """List PRs in a repo, filterable by state/base branch. Use get_pull_request for one PR's full details."""
+    """
+    List pull requests in a GitHub repository.
+    """
 
     if not username:
         username = get_authenticated_username()

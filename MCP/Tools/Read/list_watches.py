@@ -3,7 +3,7 @@ from MCP.github_client import github_get
 
 from MCP.server import mcp
 
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def list_watchers( 
@@ -12,7 +12,7 @@ def list_watchers(
     limit: int = 10
     ):
     
-    """List users watching/subscribed to a repository."""
+    """List repository watchers."""
 
 
     if not username:

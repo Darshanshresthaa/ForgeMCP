@@ -3,7 +3,7 @@ from MCP.github_client import github_post
 
 from MCP.server import mcp
 
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def submit_pull_request_review(
@@ -13,7 +13,13 @@ def submit_pull_request_review(
     event: str,
     body: str = "",
 ):
-    """Submit a review on a PR. event: APPROVE, REQUEST_CHANGES, or COMMENT."""
+    """
+    Submit a pull request review.
+    Events:
+    APPROVE
+    REQUEST_CHANGES
+    COMMENT
+    """
 
     event = event.upper()
 

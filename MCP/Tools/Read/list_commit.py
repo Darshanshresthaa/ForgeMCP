@@ -3,7 +3,7 @@ from MCP.github_client import github_get
 
 from MCP.server import mcp
 
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def list_commits(
@@ -16,7 +16,7 @@ def list_commits(
     ):
 
 
-    """List commits in a repo, filterable by branch/author, paginated. Use get_commit for one commit's full details."""
+    """List commits from a GitHub repository."""
 
 
     if not username:

@@ -3,7 +3,7 @@ from MCP.github_client import github_get
 
 from MCP.server import mcp
 
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 
 @mcp.tool
@@ -12,7 +12,9 @@ def list_pull_request_files(
     repo_name: str,
     pull_request_number: int,
 ):
-    """List files changed in a PR, including diffs/patches."""
+    """
+    List all files changed in a pull request.
+    """
 
     if not username:
         username = get_authenticated_username()

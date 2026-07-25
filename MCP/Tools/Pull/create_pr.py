@@ -3,7 +3,7 @@ from MCP.github_client import github_post
 
 from MCP.server import mcp
 
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 
 
@@ -17,7 +17,7 @@ def create_pull_request(
     body: str = "",
     draft: bool = False,
 ):
-    """Create a new pull request from head branch into base branch."""
+    """Create a pull request."""
 
     if head == base:
         raise ValueError("head and base branches cannot be the same.")

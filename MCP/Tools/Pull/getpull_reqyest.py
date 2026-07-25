@@ -3,7 +3,7 @@ from MCP.github_client import github_get
 
 from MCP.server import mcp
 
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 
 @mcp.tool
@@ -12,7 +12,9 @@ def get_pull_request(
     repo_name: str,
     pull_request_number: int,
 ):
-    """Get full details of one PR by number: mergeable state, diff stats, branches. Use list_pull_requests to browse many PRs."""
+    """
+    Retrieve detailed information about a specific pull request.
+    """
 
     if not username:
         username = get_authenticated_username()

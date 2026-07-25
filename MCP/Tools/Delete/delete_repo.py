@@ -2,7 +2,7 @@ from fastmcp import FastMCP
 from MCP.github_client import git_delete
 
 from MCP.server import mcp
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 
 @mcp.tool
@@ -11,7 +11,7 @@ def delete_repository(
     repo_name: str,
     confirm: bool = False,
 ):
-    """Permanently delete an entire repository. Requires confirm=True. Irreversible, use with caution."""
+    """Delete a GitHub repository."""
 
 
     if not confirm:

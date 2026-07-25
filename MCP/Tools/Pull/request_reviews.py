@@ -3,7 +3,7 @@ from MCP.github_client import github_post
 
 from MCP.server import mcp
 
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 
 @mcp.tool
@@ -13,7 +13,7 @@ def request_reviewers(
     pull_request_number: int,
     reviewers: list[str],
 ):
-    """Request specific GitHub users as reviewers on a PR."""
+    """Request reviewers for a pull request."""
 
     if pull_request_number <= 0:
         raise ValueError("pull_request_number must be greater than 0.")

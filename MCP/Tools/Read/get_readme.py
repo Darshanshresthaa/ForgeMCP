@@ -4,7 +4,7 @@ import base64
 
 from MCP.server import mcp
 
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 
 @mcp.tool

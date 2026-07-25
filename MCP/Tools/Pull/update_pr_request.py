@@ -3,7 +3,7 @@ from MCP.github_client import github_patch
 
 from MCP.server import mcp
 
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def update_pull_request(
@@ -15,7 +15,7 @@ def update_pull_request(
     state: str | None = None,
     base: str | None = None,
 ):
-    """Update a PR's title, body, state, or base branch (partial update, only set fields provided)."""
+    """Update a pull request."""
 
     payload = {}
 

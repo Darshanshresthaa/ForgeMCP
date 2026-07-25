@@ -3,7 +3,7 @@ from MCP.github_client import github_get
 
 from MCP.server import mcp
 
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 
 @mcp.tool
@@ -12,7 +12,7 @@ def list_pull_request_reviews(
     repo_name: str,
     pull_request_number: int,
 ):
-    """List submitted reviews (approve/changes/comment) on a PR. Use submit_pull_request_review to add one."""
+    """List reviews on a pull request."""
 
     if not username:
         username = get_authenticated_username()

@@ -2,7 +2,7 @@ from fastmcp import FastMCP
 from MCP.github_client import github_get,git_delete
 
 from MCP.server import mcp
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 
 
@@ -15,7 +15,7 @@ def delete_file(
     branch: str = "main",
     confirm: bool = False,
 ):
-    """Permanently delete one file from a repo. Requires confirm=True. Destructive."""
+    """Delete a file from a GitHub repository."""
 
     if not confirm:
         raise ValueError(

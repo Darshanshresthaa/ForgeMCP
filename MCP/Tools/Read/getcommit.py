@@ -3,7 +3,7 @@ from MCP.github_client import github_get
 
 from MCP.server import mcp
 
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def get_commit(
@@ -12,7 +12,7 @@ def get_commit(
     sha: str
     ):
     
-    """Get details of one commit by SHA (message, author, changed files). Use list_commits to browse many commits."""
+    """Get commit details."""
 
 
     if not username:
