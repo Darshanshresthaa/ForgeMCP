@@ -2,7 +2,7 @@ from fastmcp import FastMCP
 from MCP.github_client import github_get
 from MCP.server import mcp
 
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def list_releases(
@@ -11,7 +11,7 @@ def list_releases(
         limit: int = 10
         ):
     
-    """List all releases of a repo. Use get_latest_release for just the newest one."""
+    """List repository releases."""
 
     if not username:
         username = get_authenticated_username()
