@@ -4,10 +4,17 @@ import base64
 
 from MCP.server import mcp
 
+from helper import get_authenticated_username
+
 
 @mcp.tool
-def get_readme(username: str, repo_name: str):
+def get_readme(username: str,
+                repo_name: str
+            ):
     """Get repository README."""
+
+    if not username:
+        username = get_authenticated_username()
 
     try:
         readme = github_get(f"/repos/{username}/{repo_name}/readme")

@@ -2,12 +2,22 @@ from fastmcp import FastMCP
 from MCP.github_client import github_get
 from MCP.server import mcp
 
+from helper import get_authenticated_username
 
 @mcp.tool
-def get_repository(username: str, repo_name: str):
+def get_repository(
+                    username: str, 
+                   repo_name: str
+                ):
+
+    
     """
     Get repository details including metadata, statistics, and configuration.
     """
+
+    if not username:
+        username = get_authenticated_username()
+        
 
     try:
         details = github_get(f"/repos/{username}/{repo_name}")

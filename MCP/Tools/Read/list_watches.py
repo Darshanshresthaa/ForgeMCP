@@ -3,9 +3,20 @@ from MCP.github_client import github_get
 
 from MCP.server import mcp
 
+from helper import get_authenticated_username
+
 @mcp.tool
-def list_watchers( username: str, repo_name: str, limit: int = 10):
+def list_watchers( 
+    username: str,
+    repo_name: str,
+    limit: int = 10
+    ):
+    
     """List repository watchers."""
+
+
+    if not username:
+        username = get_authenticated_username()
 
     try:
         watchers = github_get(

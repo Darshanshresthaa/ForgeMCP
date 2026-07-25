@@ -3,10 +3,15 @@ from MCP.github_client import github_get
 
 from MCP.server import mcp
 
+from helper import get_authenticated_username
 
 @mcp.tool
 def get_branches(username: str, repo_name: str):
     """List repository branches."""
+
+    if not username:
+        username = get_authenticated_username()
+        
 
     try:
         branches = github_get(f"/repos/{username}/{repo_name}/branches")

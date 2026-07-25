@@ -3,11 +3,18 @@ from MCP.github_client import github_get
 
 from MCP.server import mcp
 
+from helper import get_authenticated_username
+
 @mcp.tool
 def list_repositories(username: str):
+
     """
     Returns a list of all public repositories for a GitHub user.
     """
+
+    if not username:
+        username = get_authenticated_username()
+        
     try:
         repos = github_get(f"/users/{username}/repos")
 

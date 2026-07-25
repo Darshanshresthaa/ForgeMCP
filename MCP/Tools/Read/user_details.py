@@ -4,10 +4,17 @@ from MCP.github_client import github_get
 
 from MCP.server import mcp
 
+from helper import get_authenticated_username
+
 @mcp.tool
 def get_user_details(username: str):
 
     """Get basic GitHub user details. which is publically available"""
+
+
+    if not username:
+        username = get_authenticated_username()
+        
     try:
         profile = github_get(f"/users/{username}")
 

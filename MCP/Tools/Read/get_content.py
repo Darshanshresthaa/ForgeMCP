@@ -4,12 +4,21 @@ import base64
 
 from MCP.server import mcp
 
+from helper import get_authenticated_username
+
 @mcp.tool
-def get_repository_code(username: str,repo_name: str,folder_path: str = None,branch: str = "main"):
+def get_repository_code(username: str,
+                        repo_name: str,
+                        folder_path: str = None,
+                        branch: str = "main"
+            ):
     """
     Get code files from a GitHub repository.
     Optionally filter by folder path.
     """
+
+    if not username:
+        username = get_authenticated_username()
 
     try:
         # Get repository tree

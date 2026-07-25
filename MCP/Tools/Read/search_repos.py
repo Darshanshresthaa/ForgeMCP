@@ -1,24 +1,34 @@
-from fastmcp import FastMCP
 from MCP.github_client import github_get
-
 from MCP.server import mcp
+
+
 @mcp.tool
-def search_repos(query: str,limit:int=10):
-    """Search GitHub users by username or keyword."""
+def search_repos(
+    query: str,
+    limit: int = 10,
+):
+    """
+    Search GitHub repositories by name or keyword of repo.
+    """
+
+    if not query.strip():
+        raise ValueError("Query cannot be empty.")
+
+    if not (1 <= limit <= 100):
+        raise ValueError("limit must be between 1 and 100.")
 
     try:
-        users = github_get(
+        repos = github_get(
             "/search/repositories",
-            params={"q": query,
-                   'per_page':limit}
+            params={
+                "q": query,
+                "per_page": limit,
+            },
         )
 
-        return users["items"]
-
-    except ValueError:
-        raise
+        return repos["items"]
 
     except Exception as e:
         raise RuntimeError(
-            f"Failed to search users for '{query}'."
+            f"Failed to search repositories for '{query}': {e}"
         ) from e

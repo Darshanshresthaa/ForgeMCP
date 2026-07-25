@@ -3,9 +3,25 @@ from MCP.github_client import github_get
 
 from MCP.server import mcp
 
+from helper import get_authenticated_username
+
 @mcp.tool
-def list_commits(username: str,repo_name: str,limit: int = 10,page: int = 1,branch: str | None = None,author: str | None = None):
+def list_commits(
+    username: str,
+    repo_name: str,
+    limit: int = 10,
+    page: int = 1,
+    branch: str | None = None,
+    author: str | None = None
+    ):
+
+
     """List commits from a GitHub repository."""
+
+
+    if not username:
+        username = get_authenticated_username()
+
 
     if not username.strip():
         raise ValueError("Username cannot be empty.")

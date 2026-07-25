@@ -3,10 +3,19 @@ from MCP.github_client import github_get
 
 from MCP.server import mcp
 
+from helper import get_authenticated_username
+
+
 @mcp.tool
-def get_latest_release(username: str, repo_name: str):
+def get_latest_release(username: str,
+                        repo_name: str
+                    ):
+    
     """Get the latest repository release."""
 
+    if not username:
+        username = get_authenticated_username()
+        
     try:
         release = github_get(
             f"/repos/{username}/{repo_name}/releases/latest"
