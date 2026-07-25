@@ -3,8 +3,7 @@ from MCP.github_client import github_get
 
 from MCP.server import mcp
 
-from helper import get_authenticated_username
-
+from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def compare_commits(
@@ -13,7 +12,7 @@ def compare_commits(
     base: str,
     head: str,
 ):
-    """Compare two commits or branches.""" 
+    """Diff two commits/branches: ahead/behind counts + commit list between base and head. For single commit info use get_commit."""
 
     if not username:
         username = get_authenticated_username()

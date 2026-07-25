@@ -17,7 +17,7 @@ def create_pull_request(
     body: str = "",
     draft: bool = False,
 ):
-    """Create a pull request."""
+    """Create a new pull request from head branch into base branch."""
 
     if head == base:
         raise ValueError("head and base branches cannot be the same.")

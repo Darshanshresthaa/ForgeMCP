@@ -12,9 +12,7 @@ def create_repository(
     private: bool = True,
     auto_init: bool = True,
 ):
-    """
-    Create a new GitHub repository.
-    """
+    """Create a new empty remote GitHub repo (no local files). For uploading an existing local folder use push_local_to_github."""
     payload = {
         "name": repo_name,
         "description": description,

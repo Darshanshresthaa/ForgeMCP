@@ -11,9 +11,7 @@ def get_repository(
                 ):
 
     
-    """
-    Get repository details including metadata, statistics, and configuration.
-    """
+    """Get repo metadata: stats, visibility, topics, license, urls. Not file contents (use get_repository_code) or commits."""
 
     if not username:
         username = get_authenticated_username()

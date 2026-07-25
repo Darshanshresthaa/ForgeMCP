@@ -11,7 +11,7 @@ def get_latest_release(username: str,
                         repo_name: str
                     ):
     
-    """Get the latest repository release."""
+    """Get the newest published release of a repo. Use list_releases for full release history."""
 
     if not username:
         username = get_authenticated_username()

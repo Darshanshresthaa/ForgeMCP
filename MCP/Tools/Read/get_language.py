@@ -10,6 +10,7 @@ from helper import get_authenticated_username
 def get_langauge(username:str,
                  repo_name:str
                  ):
+    """Get language breakdown (bytes per language) used in a repo."""
 
     if not username:
         username = get_authenticated_username()

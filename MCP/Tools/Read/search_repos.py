@@ -7,9 +7,7 @@ def search_repos(
     query: str,
     limit: int = 10,
 ):
-    """
-    Search GitHub repositories by name or keyword of repo.
-    """
+    """Search GitHub repos globally by keyword/name. Use list_repositories to browse a known user's repos instead."""
 
     if not query.strip():
         raise ValueError("Query cannot be empty.")

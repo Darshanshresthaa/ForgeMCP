@@ -12,7 +12,7 @@ def list_pull_request_reviews(
     repo_name: str,
     pull_request_number: int,
 ):
-    """List reviews on a pull request."""
+    """List submitted reviews (approve/changes/comment) on a PR. Use submit_pull_request_review to add one."""
 
     if not username:
         username = get_authenticated_username()

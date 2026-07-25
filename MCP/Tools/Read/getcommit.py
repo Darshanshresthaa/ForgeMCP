@@ -6,13 +6,18 @@ from MCP.server import mcp
 from helper import get_authenticated_username
 
 @mcp.tool
-def get_commit(username: str,repo_name: str,sha: str):
-    """Get commit details."""
+def get_commit(
+    username: str,
+    repo_name: str,
+    sha: str
+    ):
+    
+    """Get details of one commit by SHA (message, author, changed files). Use list_commits to browse many commits."""
 
 
     if not username:
         username = get_authenticated_username()
-        
+
     try:
         commit = github_get(
             f"/repos/{username}/{repo_name}/commits/{sha}"

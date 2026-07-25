@@ -12,9 +12,7 @@ def list_pull_request_files(
     repo_name: str,
     pull_request_number: int,
 ):
-    """
-    List all files changed in a pull request.
-    """
+    """List files changed in a PR, including diffs/patches."""
 
     if not username:
         username = get_authenticated_username()

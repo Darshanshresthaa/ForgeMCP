@@ -11,7 +11,7 @@ def delete_repository(
     repo_name: str,
     confirm: bool = False,
 ):
-    """Delete a GitHub repository."""
+    """Permanently delete an entire repository. Requires confirm=True. Irreversible, use with caution."""
 
 
     if not confirm:

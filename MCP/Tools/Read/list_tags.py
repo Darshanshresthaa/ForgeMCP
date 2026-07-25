@@ -14,7 +14,7 @@ def list_tags(
     page: int = 1
     ):
 
-    """List all Tags repository tags."""
+    """List git tags of a repository."""
 
     if not 1 <= limit <= 100:
         raise ValueError("limit must be between 1 and 100.")

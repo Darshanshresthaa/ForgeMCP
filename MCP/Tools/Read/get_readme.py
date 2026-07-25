@@ -11,7 +11,7 @@ from helper import get_authenticated_username
 def get_readme(username: str,
                 repo_name: str
             ):
-    """Get repository README."""
+    """Get a repo's README file content (decoded text)."""
 
     if not username:
         username = get_authenticated_username()

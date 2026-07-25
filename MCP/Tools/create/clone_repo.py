@@ -10,9 +10,7 @@ def clone_repository(
     repo_url: str,
     destination: str = ".",
 ):
-    """
-    Clone a GitHub repository.
-    """
+    """Clone a GitHub repo to local disk (git clone). Opposite of push_local_to_github."""
 
     try:
         repo_name = os.path.basename(repo_url.rstrip("/"))

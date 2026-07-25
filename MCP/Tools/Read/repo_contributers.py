@@ -13,7 +13,7 @@ def repo_contributors(
     limit: int = 10
     ):
 
-    """List repository contributors."""
+    """List contributors to a repo with their commit counts."""
 
     if not 1 <= limit <= 100:
         raise ValueError("limit must be between 1 and 100.")

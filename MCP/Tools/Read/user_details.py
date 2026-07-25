@@ -9,7 +9,7 @@ from helper import get_authenticated_username
 @mcp.tool
 def get_user_details(username: str):
 
-    """Get basic GitHub user details. which is publically available"""
+    """Get a GitHub user's public profile (bio, followers, company). Not repo-specific."""
 
 
     if not username:

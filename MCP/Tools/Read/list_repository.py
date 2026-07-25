@@ -8,9 +8,7 @@ from helper import get_authenticated_username
 @mcp.tool
 def list_repositories(username: str):
 
-    """
-    Returns a list of all public repositories for a GitHub user.
-    """
+    """List public repos owned by a user. Browse-by-user only; for keyword search use search_repos."""
 
     if not username:
         username = get_authenticated_username()

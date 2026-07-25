@@ -12,7 +12,7 @@ def list_watchers(
     limit: int = 10
     ):
     
-    """List repository watchers."""
+    """List users watching/subscribed to a repository."""
 
 
     if not username:

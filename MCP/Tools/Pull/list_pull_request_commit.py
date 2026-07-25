@@ -11,7 +11,7 @@ def list_pull_request_commits(
     repo_name: str,
     pull_request_number: int,
 ):
-    """List commits in a pull request."""
+    """List commits included in one PR."""
 
 
     if not username:

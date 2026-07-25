@@ -2,7 +2,7 @@ from fastmcp import FastMCP
 from MCP.github_client import github_put
 import base64
 from MCP.server import mcp
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 
 @mcp.tool
@@ -14,6 +14,8 @@ def create_file(username: str,
                 branch: str = "main"):
     """
     Create a new file in a GitHub repository.
+    
+    Create/add ONE new file directly in a GitHub repo via API. For uploading an entire local folder, use push_local_to_github.
     """
 
     if not username:

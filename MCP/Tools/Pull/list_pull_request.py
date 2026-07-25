@@ -16,9 +16,7 @@ def list_pull_requests(
     page:int=1,
     per_page:int=35
 ):
-    """
-    List pull requests in a GitHub repository.
-    """
+    """List PRs in a repo, filterable by state/base branch. Use get_pull_request for one PR's full details."""
 
     if not username:
         username = get_authenticated_username()

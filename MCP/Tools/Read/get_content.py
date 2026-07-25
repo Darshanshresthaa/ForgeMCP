@@ -12,10 +12,7 @@ def get_repository_code(username: str,
                         folder_path: str = None,
                         branch: str = "main"
             ):
-    """
-    Get code files from a GitHub repository.
-    Optionally filter by folder path.
-    """
+    """Fetch actual file contents/code from a repo (optionally filtered by folder). Use for reading code text, not just listing files or metadata (use get_repository for that)."""
 
     if not username:
         username = get_authenticated_username()

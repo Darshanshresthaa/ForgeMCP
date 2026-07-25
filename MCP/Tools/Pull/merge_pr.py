@@ -15,10 +15,7 @@ def merge_pull_request(
     commit_message: str = "",
     merge_method: str = "merge",
 ):
-    """
-    Merge a pull request.
-    merge_method: merge, squash, or rebase
-    """
+    """Merge a PR. merge_method: merge, squash, or rebase. Destructive/final action."""
 
     if not username:
         username = get_authenticated_username()

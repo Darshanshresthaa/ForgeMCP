@@ -15,7 +15,7 @@ def delete_file(
     branch: str = "main",
     confirm: bool = False,
 ):
-    """Delete a file from a GitHub repository."""
+    """Permanently delete one file from a repo. Requires confirm=True. Destructive."""
 
     if not confirm:
         raise ValueError(

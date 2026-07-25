@@ -15,7 +15,7 @@ def update_pull_request(
     state: str | None = None,
     base: str | None = None,
 ):
-    """Update a pull request."""
+    """Update a PR's title, body, state, or base branch (partial update, only set fields provided)."""
 
     payload = {}
 

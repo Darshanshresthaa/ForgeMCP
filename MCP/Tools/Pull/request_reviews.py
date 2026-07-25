@@ -13,7 +13,7 @@ def request_reviewers(
     pull_request_number: int,
     reviewers: list[str],
 ):
-    """Request reviewers for a pull request."""
+    """Request specific GitHub users as reviewers on a PR."""
 
     if pull_request_number <= 0:
         raise ValueError("pull_request_number must be greater than 0.")

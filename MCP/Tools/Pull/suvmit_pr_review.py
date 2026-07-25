@@ -13,13 +13,7 @@ def submit_pull_request_review(
     event: str,
     body: str = "",
 ):
-    """
-    Submit a pull request review.
-    Events:
-    APPROVE
-    REQUEST_CHANGES
-    COMMENT
-    """
+    """Submit a review on a PR. event: APPROVE, REQUEST_CHANGES, or COMMENT."""
 
     event = event.upper()
 

@@ -16,7 +16,7 @@ def list_commits(
     ):
 
 
-    """List commits from a GitHub repository."""
+    """List commits in a repo, filterable by branch/author, paginated. Use get_commit for one commit's full details."""
 
 
     if not username:

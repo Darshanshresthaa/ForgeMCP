@@ -4,7 +4,7 @@ import os
 from MCP.server import mcp
 from MCP.github_client import github_get, github_post
 from MCP.config import GITHUB_TOKEN
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 
 def _run(cmd, cwd):

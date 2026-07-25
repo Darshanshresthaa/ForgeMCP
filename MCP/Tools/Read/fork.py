@@ -4,10 +4,14 @@ from MCP.github_client import github_get
 
 from MCP.server import mcp
 
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 @mcp.tool
-def list_forks(username: str,repo_name: str,limit: int = 10,page: int = 1):
+def list_forks(username: str,
+               repo_name: str,
+               limit: int = 10,
+               page: int = 1
+        ):
     """List repository forks os check is repo orginal or copy."""
 
     if not 1 <= limit <= 100:

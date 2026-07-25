@@ -12,9 +12,7 @@ def get_pull_request(
     repo_name: str,
     pull_request_number: int,
 ):
-    """
-    Retrieve detailed information about a specific pull request.
-    """
+    """Get full details of one PR by number: mergeable state, diff stats, branches. Use list_pull_requests to browse many PRs."""
 
     if not username:
         username = get_authenticated_username()

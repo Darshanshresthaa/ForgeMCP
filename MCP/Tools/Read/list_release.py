@@ -11,7 +11,7 @@ def list_releases(
         limit: int = 10
         ):
     
-    """List repository releases."""
+    """List all releases of a repo. Use get_latest_release for just the newest one."""
 
     if not username:
         username = get_authenticated_username()
