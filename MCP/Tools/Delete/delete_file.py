@@ -2,6 +2,9 @@ from fastmcp import FastMCP
 from MCP.github_client import github_get,git_delete
 
 from MCP.server import mcp
+from helper import get_authenticated_username
+
+
 
 @mcp.tool
 def delete_file(
@@ -18,6 +21,10 @@ def delete_file(
         raise ValueError(
             "Set confirm=True to permanently delete the file."
         )
+
+    if not username:
+        username = get_authenticated_username()
+        
 
     try:
 

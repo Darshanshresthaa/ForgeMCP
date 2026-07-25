@@ -2,6 +2,7 @@ from fastmcp import FastMCP
 from MCP.github_client import git_delete
 
 from MCP.server import mcp
+from helper import get_authenticated_username
 
 
 @mcp.tool
@@ -12,10 +13,14 @@ def delete_repository(
 ):
     """Delete a GitHub repository."""
 
+
     if not confirm:
         raise ValueError(
             "Set confirm=True to permanently delete the repository."
         )
+
+    if not username:
+        username = get_authenticated_username()
 
     try:
         git_delete(
