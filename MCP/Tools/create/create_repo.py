@@ -15,7 +15,6 @@ def create_repository(
     """
     Create a new GitHub repository.
     """
-
     payload = {
         "name": repo_name,
         "description": description,
