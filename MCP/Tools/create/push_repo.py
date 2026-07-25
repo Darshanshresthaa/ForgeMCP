@@ -4,6 +4,7 @@ import os
 from MCP.server import mcp
 from MCP.github_client import github_get, github_post
 from MCP.config import GITHUB_TOKEN
+from helper import get_authenticated_username
 
 
 def _run(cmd, cwd):
@@ -37,6 +38,10 @@ def push_local_to_github(
 
     if not os.path.isdir(local_path):
         raise ValueError(f"Local path not found: {local_path}")
+
+    if not username:
+        username = get_authenticated_username()
+
 
     repo_existed = True
     try:
