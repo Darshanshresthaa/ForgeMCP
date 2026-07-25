@@ -2,13 +2,22 @@ from fastmcp import FastMCP
 from MCP.github_client import github_put
 import base64
 from MCP.server import mcp
+from helper import get_authenticated_username
 
 
 @mcp.tool
-def create_file(username: str,repo_name: str,path: str,content: str,message: str,branch: str = "main"):
+def create_file(username: str,
+                repo_name: str,
+                path: str,
+                content: str,
+                message: str,
+                branch: str = "main"):
     """
     Create a new file in a GitHub repository.
     """
+
+    if not username:
+        username = get_authenticated_username()
     
 
     encoded_content = base64.b64encode(
