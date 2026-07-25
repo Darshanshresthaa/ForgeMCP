@@ -3,6 +3,7 @@ from MCP.github_client import github_post
 
 from MCP.server import mcp
 
+from helper import get_authenticated_username
 
 @mcp.tool
 def submit_pull_request_review(
@@ -21,6 +22,11 @@ def submit_pull_request_review(
     """
 
     event = event.upper()
+
+    if not username:
+        username = get_authenticated_username()
+        
+
 
     if event not in {
         "APPROVE",

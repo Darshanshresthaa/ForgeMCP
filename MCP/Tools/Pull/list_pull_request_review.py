@@ -3,6 +3,8 @@ from MCP.github_client import github_get
 
 from MCP.server import mcp
 
+from helper import get_authenticated_username
+
 
 @mcp.tool
 def list_pull_request_reviews(
@@ -11,6 +13,9 @@ def list_pull_request_reviews(
     pull_request_number: int,
 ):
     """List reviews on a pull request."""
+
+    if not username:
+        username = get_authenticated_username()
 
     if pull_request_number <= 0:
         raise ValueError("pull_request_number must be greater than 0.")

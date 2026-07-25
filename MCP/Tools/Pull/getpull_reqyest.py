@@ -3,6 +3,9 @@ from MCP.github_client import github_get
 
 from MCP.server import mcp
 
+from helper import get_authenticated_username
+
+
 @mcp.tool
 def get_pull_request(
     username: str,
@@ -12,6 +15,10 @@ def get_pull_request(
     """
     Retrieve detailed information about a specific pull request.
     """
+
+    if not username:
+        username = get_authenticated_username()
+        
 
     try:
         url = f"/repos/{username}/{repo_name}/pulls/{pull_request_number}"

@@ -3,6 +3,8 @@ from MCP.github_client import github_get
 
 from MCP.server import mcp
 
+from helper import get_authenticated_username
+
 @mcp.tool
 def list_pull_requests(
     username: str,
@@ -17,6 +19,11 @@ def list_pull_requests(
     """
     List pull requests in a GitHub repository.
     """
+
+    if not username:
+        username = get_authenticated_username()
+        
+
 
     if state not in {"open", "closed", "all"}:
         raise ValueError("state must be 'open', 'closed', or 'all'.")

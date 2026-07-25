@@ -3,6 +3,8 @@ from MCP.github_client import github_post
 
 from MCP.server import mcp
 
+from helper import get_authenticated_username
+
 
 
 @mcp.tool
@@ -19,6 +21,10 @@ def create_pull_request(
 
     if head == base:
         raise ValueError("head and base branches cannot be the same.")
+
+    if not username:
+        username = get_authenticated_username()
+        
     
     payload = {
         "title": title,

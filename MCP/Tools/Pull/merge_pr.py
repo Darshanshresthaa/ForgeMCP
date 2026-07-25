@@ -3,6 +3,8 @@ from MCP.github_client import github_put
 
 from MCP.server import mcp
 
+from helper import get_authenticated_username
+
 
 @mcp.tool
 def merge_pull_request(
@@ -18,6 +20,9 @@ def merge_pull_request(
     merge_method: merge, squash, or rebase
     """
 
+    if not username:
+        username = get_authenticated_username()
+        
     if pull_request_number <= 0:
         raise ValueError("pull_request_number must be greater than 0.")
 

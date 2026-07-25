@@ -3,6 +3,7 @@ from MCP.github_client import github_patch
 
 from MCP.server import mcp
 
+from helper import get_authenticated_username
 
 @mcp.tool
 def update_pull_request(
@@ -17,6 +18,9 @@ def update_pull_request(
     """Update a pull request."""
 
     payload = {}
+
+    if not username:
+        username = get_authenticated_username()
 
     if title is not None:
         payload["title"] = title

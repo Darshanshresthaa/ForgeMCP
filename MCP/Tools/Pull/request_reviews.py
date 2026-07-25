@@ -3,6 +3,8 @@ from MCP.github_client import github_post
 
 from MCP.server import mcp
 
+from helper import get_authenticated_username
+
 
 @mcp.tool
 def request_reviewers(
@@ -18,6 +20,10 @@ def request_reviewers(
 
     if not reviewers:
         raise ValueError("At least one reviewer is required.")
+
+    if not username:
+        username = get_authenticated_username()
+        
 
     try:
         response = github_post(
