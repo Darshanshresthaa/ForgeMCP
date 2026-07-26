@@ -1,0 +1,176 @@
+"""Node functions for the ForgeMCP LangGraph agent (converted from Agent.ipynb)."""
+
+from typing import Any
+
+from langgraph.types import interrupt
+
+from Agent.service import get_llm
+from Agent.state import State, RouterDecision, ToolSafetyDecision
+from Agent.Prompts.router_prompt import router_prompt
+from Agent.Prompts.llm_answer_node_prompt import llm_answer_prompt
+from Agent.Prompts.tool_response_node_prompt import tool_response_prompt
+from Agent.Prompts.tool_safety_node_prompt import tool_safety_prompt
+
+
+model = get_llm()
+
+# Populated at runtime via set_tools() once MultiServerMCPClient.get_tools() resolves.
+tools: list = []
+llm_with_tools = None
+
+
+def set_tools(tool_list: list) -> None:
+    """Inject the loaded MCP tools. Must be called before the graph is run."""
+    global tools, llm_with_tools
+    tools = tool_list
+    llm_with_tools = model.bind_tools(tools)
+
+
+def intent_classifier_node(state: State):
+    """Identify whether a tool is needed OR the question can be answered directly by the llm."""
+    router_llm = router_prompt | model.with_structured_output(RouterDecision)
+    result = router_llm.invoke({"question": state.question})
+    return {"router_decision": result}
+
+
+def router(state: State):
+    """Route to llm if no tool is needed, else route to the tools node."""
+    if state.router_decision.decision == "tool":
+        return "tools_required"
+    return "llm_answer"
+
+
+def llm_answer_node(state: State):
+    """LLM answer node used when no tool is needed."""
+    chain = llm_answer_prompt | model
+
+    answer = ""
+    for chunk in chain.stream({"question": state.question}):
+        if chunk.content:
+            answer += chunk.content
+
+    return {"final_answer": answer}
+
+
+def normal_tools(state: State):
+    """Retrieve a tool name and its required args, if any tool is applicable."""
+    result = llm_with_tools.invoke(state.question)
+
+    if not result.tool_calls:
+        return {
+            "final_answer": result.content
+            or "I couldn't determine which action to take. Could you rephrase your request?"
+        }
+
+    tool_call = result.tool_calls[0]
+
+    return {
+        "tool_calls": result.tool_calls,
+        "tool_arguments": tool_call["args"],
+        "tool_name": tool_call["name"],
+    }
+
+
+def tool_selection_router(state: State):
+    """If a tool was selected, go to safety check, else end."""
+    if state.tool_name:
+        return "safety_check"
+    return "end"
+
+
+def tool_safety_node(state: State):
+    """Safety check: is this a normal read operation or a destructive one."""
+    selected_tool = None
+    for tool in tools:
+        if tool.name == state.tool_name:
+            selected_tool = tool
+            break
+
+    if selected_tool is None:
+        return {"final_answer": f"Unknown tool: {state.tool_name}"}
+
+    chain = tool_safety_prompt | model.with_structured_output(ToolSafetyDecision)
+
+    result = chain.invoke(
+        {
+            "question": state.question,
+            "tool_name": selected_tool.name,
+            "tool_description": selected_tool.description,
+        }
+    )
+
+    return {
+        "tool_safety": result,
+        "requires_hitl": result.decision == "hitl",
+    }
+
+
+def tool_safety_router(state: State):
+    """Route to normal execution if read-only, else to Human-In-The-Loop."""
+    if state.requires_hitl:
+        return "hitl"
+    return "normal"
+
+
+def dangerous_tools(state: State):
+    """Implement Human-In-The-Loop approval for destructive operations."""
+    reason = state.tool_safety.reason if state.tool_safety else ""
+
+    decision = interrupt(
+        {
+            "type": "approval",
+            "message": (
+                f"The assistant wants to run '{state.tool_name}' with arguments \n\n"
+                f"{state.tool_arguments}.\nReason: {reason}\nApprove? (y/n)"
+            ),
+        }
+    )
+
+    approved = bool(decision)
+    update: dict[str, Any] = {"approved": approved}
+
+    if not approved:
+        update["final_answer"] = "Action cancelled — not approved by user."
+
+    return update
+
+
+def approval_routing(state: State):
+    """If a destructive tool was approved by the user, execute it; else end."""
+    if state.approved:
+        return "tool_execute"
+    return "end"
+
+
+async def execute_tools(state: State):
+    """Actual tool invocation, passing the previously selected arguments."""
+    selected_tool = None
+
+    for tool in tools:
+        if tool.name == state.tool_name:
+            selected_tool = tool
+            break
+
+    if selected_tool is None:
+        return {"final_answer": f"Tool {state.tool_name} not found"}
+
+    try:
+        result = await selected_tool.ainvoke(state.tool_arguments)
+        return {"tool_result": result}
+    except Exception as ex:
+        return {"final_answer": f"Tool failed: {ex} \n\n {str(ex)}"}
+
+
+def tool_response_node(state: State):
+    """Final answer generated by the llm based on what the tool returned."""
+    chain = tool_response_prompt | model
+
+    response = chain.invoke(
+        {
+            "question": state.question,
+            "tool_name": state.tool_name,
+            "tool_result": state.tool_result,
+        }
+    )
+
+    return {"final_answer": response.content}
