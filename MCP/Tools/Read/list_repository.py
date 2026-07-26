@@ -5,11 +5,11 @@ from MCP.server import mcp
 
 from MCP.helper import get_authenticated_username
 
-from typing import Optional
+# from typing import Optional
 
 @mcp.tool
 def list_repositories(
-    username:Optional[str] | None = None 
+    username:str| None = None 
     ):
 
     """List public repos owned by a user. Browse-by-user only; for keyword search use search_repos."""
