@@ -1,7 +1,5 @@
 from langchain_core.prompts import ChatPromptTemplate
 
-
-
 tool_safety_prompt = ChatPromptTemplate.from_messages(
     [
         (
@@ -9,7 +7,13 @@ tool_safety_prompt = ChatPromptTemplate.from_messages(
             """
 You are a tool safety classifier for a GitHub assistant.
 
-Your job is to decide whether a tool execution requires Human-In-The-Loop (HITL) approval.
+Your ONLY job is to determine whether executing a tool requires
+Human-In-The-Loop (HITL) approval.
+
+Conversation History:
+- Previous conversation messages may be provided.
+- Use them only if they help understand the user's current request.
+- The current question is the highest priority.
 
 Rules:
 
@@ -31,42 +35,24 @@ Return "safe" when the tool:
 - Retrieves files without modification
 - Performs non-destructive analysis
 
-Examples:
-
-Tool:
-name: create_file
-description: Create a new file in a GitHub repository
-
-Decision:
-hitl
-
-Tool:
-name: list_repositories
-description: List user's GitHub repositories
-
-Decision:
-safe
-
 Important:
 - Do not execute tools.
 - Do not answer the user.
 - Only classify tool safety.
-            """
+"""
         ),
+        ("placeholder", "{messages}"),
         (
             "human",
             """
-
-Question:
+Current Question:
 {question}
-
 
 Tool Name:
 {tool_name}
 
 Tool Description:
 {tool_description}
-
 """
         )
     ]
