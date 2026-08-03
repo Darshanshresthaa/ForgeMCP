@@ -17,13 +17,13 @@ def create_branch(
 
 
     if  branch_name is None:
-        branch_name = f"Branch- {uuid4()}"
+        branch_name = f"branch-{uuid4().hex[:5]}"
 
 
     try:
 
         ref = github_get(
-                    f"/repos/{username}/{repo_name}/git/refs/heads/{source_branch}"
+                    f"/repos/{username}/{repo_name}/git/ref/heads/{source_branch}"
                 )
         sha=ref['object']['sha']
 
