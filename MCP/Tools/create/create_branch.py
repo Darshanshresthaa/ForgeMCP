@@ -22,8 +22,9 @@ def create_branch(
 
     try:
 
-        ref = github_get(f"/repos/{username}/{repo_name}/git/ref/heads/{source_branch}")
-
+        ref = github_get(
+                    f"/repos/{username}/{repo_name}/git/refs/heads/{source_branch}"
+                )
         sha=ref['object']['sha']
 
         response = github_post(
