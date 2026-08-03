@@ -7,11 +7,12 @@ from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def submit_pull_request_review(
-    username: str,
+    # username: str,
     repo_name: str,
     pull_request_number: int,
     event: str,
     body: str = "",
+    username: str | None = None
 ):
     """
     Submit a pull request review.
@@ -23,7 +24,7 @@ def submit_pull_request_review(
 
     event = event.upper()
 
-    if not username:
+    if  username is None:
         username = get_authenticated_username()
         
 

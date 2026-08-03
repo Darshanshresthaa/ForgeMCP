@@ -7,19 +7,19 @@ from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def list_commits(
-    username: str,
     repo_name: str,
     limit: int = 10,
     page: int = 1,
     branch: str | None = None,
-    author: str | None = None
+    author: str | None = None,
+    username: str | None = None
     ):
 
 
     """List commits from a GitHub repository."""
 
 
-    if not username:
+    if  username is None:
         username = get_authenticated_username()
 
 

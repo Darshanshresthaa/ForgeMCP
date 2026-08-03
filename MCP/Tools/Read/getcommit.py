@@ -7,15 +7,15 @@ from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def get_commit(
-    username: str,
     repo_name: str,
-    sha: str
+    sha: str,
+    username: str | None = None
     ):
     
     """Get commit details."""
 
 
-    if not username:
+    if  username in None:
         username = get_authenticated_username()
 
     try:

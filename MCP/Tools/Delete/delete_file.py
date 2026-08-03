@@ -8,12 +8,13 @@ from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def delete_file(
-    username: str,
+    # username: str,
     repo_name: str,
     path: str,
     message: str,
     branch: str = "main",
     confirm: bool = False,
+    username: str | None = None
 ):
     """Delete a file from a GitHub repository."""
 
@@ -22,7 +23,7 @@ def delete_file(
             "Set confirm=True to permanently delete the file."
         )
 
-    if not username:
+    if  username is None:
         username = get_authenticated_username()
         
 

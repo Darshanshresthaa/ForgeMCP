@@ -7,20 +7,21 @@ from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def list_pull_requests(
-    username: str,
+    # username: str,
     repo_name: str,
     state: str = "open",
     base: str | None = None,
     sort: str = "created",
     direction: str = "desc",
     page:int=1,
-    per_page:int=35
+    per_page:int=35,
+    username: str | None = None
 ):
     """
     List pull requests in a GitHub repository.
     """
 
-    if not username:
+    if  username is None:
         username = get_authenticated_username()
         
 

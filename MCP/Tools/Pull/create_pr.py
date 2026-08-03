@@ -9,20 +9,21 @@ from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def create_pull_request(
-    username: str,
+    # username: str,
     repo_name: str,
     title: str,
     head: str,
     base: str = "main",
     body: str = "",
     draft: bool = False,
+    username: str | None = None
 ):
     """Create a pull request."""
 
     if head == base:
         raise ValueError("head and base branches cannot be the same.")
 
-    if not username:
+    if  username is None:
         username = get_authenticated_username()
         
     

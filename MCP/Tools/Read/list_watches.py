@@ -7,15 +7,15 @@ from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def list_watchers( 
-    username: str,
     repo_name: str,
-    limit: int = 10
+    limit: int = 10,
+    username: str | None = None
     ):
     
     """List repository watchers."""
 
 
-    if not username:
+    if  username is None: 
         username = get_authenticated_username()
 
     try:

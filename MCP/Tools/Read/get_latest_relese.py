@@ -7,13 +7,14 @@ from MCP.helper import get_authenticated_username
 
 
 @mcp.tool
-def get_latest_release(username: str,
-                        repo_name: str
+def get_latest_release(
+                        repo_name: str,
+                        username: str | None = None
                     ):
     
     """Get the newest published release of a repo. Use list_releases for full release history."""
 
-    if not username:
+    if username is None:
         username = get_authenticated_username()
         
     try:

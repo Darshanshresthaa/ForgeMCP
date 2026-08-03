@@ -8,19 +8,20 @@ from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def merge_pull_request(
-    username: str,
+    # username: str,
     repo_name: str,
     pull_request_number: int,
     commit_title: str = "",
     commit_message: str = "",
     merge_method: str = "merge",
+    username: str | None = None
 ):
     """
     Merge a pull request.
     merge_method: merge, squash, or rebase
     """
 
-    if not username:
+    if  username is None:
         username = get_authenticated_username()
         
     if pull_request_number <= 0:

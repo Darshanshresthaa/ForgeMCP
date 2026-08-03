@@ -8,12 +8,13 @@ from MCP.helper import get_authenticated_username
 
 
 @mcp.tool
-def get_readme(username: str,
-                repo_name: str
+def get_readme(
+                repo_name: str,
+                username: str | None = None
             ):
     """Get a repo's README file content (decoded text)."""
 
-    if not username:
+    if username is None:
         username = get_authenticated_username()
 
     try:

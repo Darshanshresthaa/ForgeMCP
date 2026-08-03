@@ -7,12 +7,13 @@ from MCP.helper import get_authenticated_username
 
 
 @mcp.tool
-def get_langauge(username:str,
-                 repo_name:str
+def get_langauge(
+                 repo_name:str,
+                 username:str | None = None
                  ):
     """Get language breakdown (bytes per language) used in a repo."""
 
-    if not username:
+    if username is None:
         username = get_authenticated_username()
         
 

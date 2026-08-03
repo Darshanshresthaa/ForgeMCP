@@ -7,9 +7,10 @@ from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def delete_repository(
-    username: str,
+    # username: str,
     repo_name: str,
     confirm: bool = False,
+    username: str | None = None,
 ):
     """Delete a GitHub repository."""
 
@@ -19,7 +20,7 @@ def delete_repository(
             "Set confirm=True to permanently delete the repository."
         )
 
-    if not username:
+    if  username is None:
         username = get_authenticated_username()
 
     try:

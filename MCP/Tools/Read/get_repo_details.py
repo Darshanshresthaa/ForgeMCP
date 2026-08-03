@@ -6,14 +6,14 @@ from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def get_repository(
-                    username: str, 
-                   repo_name: str
+                   repo_name: str,
+                   username: str | None = None
                 ):
 
     
     """Get repo metadata: stats, visibility, topics, license, urls. Not file contents (use get_repository_code) or commits."""
 
-    if not username:
+    if  username is None:
         username = get_authenticated_username()
         
 

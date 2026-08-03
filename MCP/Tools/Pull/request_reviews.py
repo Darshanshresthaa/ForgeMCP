@@ -8,10 +8,11 @@ from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def request_reviewers(
-    username: str,
+    # username: str,
     repo_name: str,
     pull_request_number: int,
     reviewers: list[str],
+    username: str | None = None
 ):
     """Request reviewers for a pull request."""
 
@@ -21,7 +22,7 @@ def request_reviewers(
     if not reviewers:
         raise ValueError("At least one reviewer is required.")
 
-    if not username:
+    if  username is None:
         username = get_authenticated_username()
         
 

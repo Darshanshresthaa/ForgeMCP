@@ -8,15 +8,15 @@ from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def get_pull_request(
-    username: str,
     repo_name: str,
     pull_request_number: int,
+    username: str | None = None
 ):
     """
     Retrieve detailed information about a specific pull request.
     """
 
-    if not username:
+    if  username is None:
         username = get_authenticated_username()
         
 

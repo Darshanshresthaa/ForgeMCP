@@ -6,13 +6,14 @@ from MCP.server import mcp
 from MCP.helper import get_authenticated_username
 
 @mcp.tool
-def get_branches(username: str, 
-                 repo_name: str
+def get_branches(
+                 repo_name: str,
+                 username: str | None = None
         ):
     
     """List branch names of a repo with protection status."""
 
-    if not username:
+    if  username is None:
         username = get_authenticated_username()
 
 

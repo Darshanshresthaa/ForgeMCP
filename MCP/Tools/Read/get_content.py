@@ -7,14 +7,15 @@ from MCP.server import mcp
 from MCP.helper import get_authenticated_username
 
 @mcp.tool
-def get_repository_code(username: str,
+def get_repository_code(
                         repo_name: str,
                         folder_path: str = None,
-                        branch: str = "main"
+                        branch: str = "main",
+                        username: str | None = None
             ):
     """Fetch actual file contents/code from a repo (optionally filtered by folder). Use for reading code text, not just listing files or metadata (use get_repository for that)."""
 
-    if not username:
+    if username is None:
         username = get_authenticated_username()
 
     try:

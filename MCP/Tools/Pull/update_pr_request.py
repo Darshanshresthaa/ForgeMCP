@@ -7,19 +7,20 @@ from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def update_pull_request(
-    username: str,
+    # username: str,
     repo_name: str,
     pull_request_number: int,
     title: str | None = None,
     body: str | None = None,
     state: str | None = None,
     base: str | None = None,
+    username: str | None = None
 ):
     """Update a pull request."""
 
     payload = {}
 
-    if not username:
+    if  username is None:
         username = get_authenticated_username()
 
     if title is not None:

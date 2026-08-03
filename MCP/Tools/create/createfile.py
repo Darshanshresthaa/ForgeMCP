@@ -6,19 +6,21 @@ from MCP.helper import get_authenticated_username
 
 
 @mcp.tool
-def create_file(username: str,
+def create_file(
                 repo_name: str,
                 path: str,
                 content: str,
                 message: str,
-                branch: str = "main"):
+                branch: str = "main",
+                username: str | None = None):
+    
     """
     Create a new file in a GitHub repository.
     
     Create/add ONE new file directly in a GitHub repo via API. For uploading an entire local folder, use push_local_to_github.
     """
 
-    if not username:
+    if  username is None:
         username = get_authenticated_username()
     
 

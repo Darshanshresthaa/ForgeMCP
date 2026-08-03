@@ -7,12 +7,12 @@ from MCP.server import mcp
 from MCP.helper import get_authenticated_username
 
 @mcp.tool
-def get_user_details(username: str):
+def get_user_details(username: str | None = None):
 
     """Get basic GitHub user details. which is publically available"""
 
 
-    if not username:
+    if  username is None:
         username = get_authenticated_username()
 
     try:

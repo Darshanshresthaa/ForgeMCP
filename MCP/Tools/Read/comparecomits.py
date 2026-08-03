@@ -7,14 +7,14 @@ from MCP.helper import get_authenticated_username
 
 @mcp.tool
 def compare_commits(
-    username: str,
     repo_name: str,
     base: str,
     head: str,
+    username: str | None = None
 ):
     """Diff two commits/branches: ahead/behind counts + commit list between base and head. For single commit info use get_commit."""
 
-    if not username:
+    if  username is None:
         username = get_authenticated_username()
         
 
