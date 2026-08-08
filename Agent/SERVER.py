@@ -1,12 +1,8 @@
-"""CLI entrypoint for the ForgeMCP LangGraph agent (converted from Agent.ipynb).
-
-Loads MCP tools from the ForgeMCP server, compiles the graph, and runs a simple
-input loop, resolving any HITL approval interrupts via stdin.
-"""
 
 import asyncio
 import uuid
 
+from langchain_core.messages import HumanMessage
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
 from Agent.service import get_mcp_server
@@ -24,12 +20,62 @@ async def main():
     config = {"configurable": {"thread_id": str(uuid.uuid4())}}
 
     while True:
-        question = input("\nYou: ")
-        if question.strip().lower() in {"exit", "quit"}:
+        question = input("\nYou: ").strip()
+
+        if question.lower() in {"end", "exit", "quit"}:
+            print(
+                """
+============================================================
+
+Thank you for using ForgeMCP.
+
+Keep coding.
+Keep learning.
+Keep building.
+
+Every project you complete,
+every bug you fix,
+and every challenge you overcome
+makes you a better engineer.
+
+Success is not achieved overnight.
+It is built through consistent effort,
+continuous learning,
+and persistence.
+
+"The expert in anything was once a beginner."
+
+Goodbye, and happy coding!
+
+============================================================
+"""
+            )
             break
 
-        result = await run_graph(graph, question, config)
-        print(f"\nAssistant: {result.get('final_answer', '')}")
+        try:
+            result = await run_graph(
+                graph=graph,
+                question=question,
+                config=config,
+                messages=[HumanMessage(content=question)],
+            )
+
+            for k, v in result.items():
+                if k == "messages":
+                    continue
+                print(f"{k}: {v}")
+                print()
+
+            print()
+            print("=" * 90)
+            print()
+
+        except KeyboardInterrupt:
+            print("\nSession interrupted by user.")
+            break
+
+        except Exception as e:
+            print(f"\nAn unexpected error occurred:\n{e}")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
-"""Graph wiring for the ForgeMCP LangGraph agent (converted from Agent.ipynb)."""
+"""Graph wiring for the ForgeMCP LangGraph agent (converted from agent_copy.ipynb)."""
 
+from langchain_core.messages import BaseMessage
 from langgraph.graph import START, END, StateGraph
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
@@ -13,9 +14,10 @@ def build_graph() -> StateGraph:
     builder = StateGraph(State)
 
     # Nodes
+    builder.add_node("planner_node", nodes.planner_node)
     builder.add_node("intent_classifier_node", nodes.intent_classifier_node)
-    builder.add_node("llm_answer_node", nodes.llm_answer_node)
 
+    builder.add_node("llm_answer_node", nodes.llm_answer_node)
     builder.add_node("normal_tools", nodes.normal_tools)
 
     builder.add_node("tool_safety_node", nodes.tool_safety_node)
@@ -24,8 +26,23 @@ def build_graph() -> StateGraph:
     builder.add_node("execute_tools", nodes.execute_tools)
     builder.add_node("tool_response_node", nodes.tool_response_node)
 
-    builder.add_edge(START, "intent_classifier_node")
+    builder.add_node("update_task_node", nodes.update_task_node)
 
+    builder.add_node("summary_node", nodes.summary_node)
+
+    builder.add_edge(START, "planner_node")
+
+    # Planner -> next subtask or straight to summary if nothing to do
+    builder.add_conditional_edges(
+        "planner_node",
+        nodes.planner_router,
+        {
+            "intent_classifier": "intent_classifier_node",
+            "summary": "summary_node",
+        },
+    )
+
+    # Intent classifier if/else
     builder.add_conditional_edges(
         "intent_classifier_node",
         nodes.router,
@@ -35,6 +52,7 @@ def build_graph() -> StateGraph:
         },
     )
 
+    # Tool selection
     builder.add_conditional_edges(
         "normal_tools",
         nodes.tool_selection_router,
@@ -44,6 +62,7 @@ def build_graph() -> StateGraph:
         },
     )
 
+    # Tool safety if/else
     builder.add_conditional_edges(
         "tool_safety_node",
         nodes.tool_safety_router,
@@ -53,6 +72,7 @@ def build_graph() -> StateGraph:
         },
     )
 
+    # HITL
     builder.add_conditional_edges(
         "dangerous_tools",
         nodes.approval_routing,
@@ -63,9 +83,20 @@ def build_graph() -> StateGraph:
     )
 
     builder.add_edge("execute_tools", "tool_response_node")
+    builder.add_edge("tool_response_node", "update_task_node")
+    builder.add_edge("llm_answer_node", "update_task_node")
 
-    builder.add_edge("tool_response_node", END)
-    builder.add_edge("llm_answer_node", END)
+    # Loop back over remaining subtasks, or wrap up with the summary
+    builder.add_conditional_edges(
+        "update_task_node",
+        nodes.planner_router,
+        {
+            "intent_classifier": "intent_classifier_node",
+            "summary": "summary_node",
+        },
+    )
+
+    builder.add_edge("summary_node", END)
 
     return builder
 
@@ -77,10 +108,20 @@ def compile_graph():
     return builder.compile(checkpointer=memory)
 
 
-async def run_graph(graph, question: str, config: dict):
+async def run_graph(
+    graph,
+    question: str,
+    config: dict,
+    messages: list[BaseMessage] | None = None,
+):
     """Run the graph end-to-end, prompting on stdin for any Human-In-The-Loop approval."""
+    messages = nodes.balance_context_window(messages or [])
+
     result = await graph.ainvoke(
-        {"question": question},
+        {
+            "question": question,
+            "messages": messages,
+        },
         config=config,
     )
 
