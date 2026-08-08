@@ -6,14 +6,15 @@ from langchain_core.messages import HumanMessage
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
 from Agent.service import get_mcp_server
-from Agent import nodes
+from Agent.nodes import set_tools
 from Agent.graph import compile_graph, run_graph
 
 
 async def main():
     client = MultiServerMCPClient(get_mcp_server())
     tools = await client.get_tools()
-    nodes.set_tools(tools)
+
+    set_tools(tools)  #passing list of tools
 
     graph = compile_graph()
 

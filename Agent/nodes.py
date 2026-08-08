@@ -25,7 +25,9 @@ MAX_MESSAGES = 20
 
 
 def set_tools(tool_list: list) -> None:
+
     """Inject the loaded MCP tools. Must be called before the graph is run."""
+    
     global tools, llm_with_tools
     tools = tool_list
     llm_with_tools = model.bind_tools(tools)
@@ -323,7 +325,7 @@ def update_task_node(state: State):
 def summary_node(state: State):
 
     """Summarize the full execution plan and log into a final Markdown report."""
-    
+
     chain = summary_prompt | model
 
     plan = ""
