@@ -1,4 +1,4 @@
-"""Node functions for the ForgeMCP LangGraph agent (converted from agent_copy.ipynb)."""
+
 
 from typing import Any
 
@@ -27,7 +27,7 @@ MAX_MESSAGES = 20
 def set_tools(tool_list: list) -> None:
 
     """Inject the loaded MCP tools. Must be called before the graph is run."""
-    
+
     global tools, llm_with_tools
     tools = tool_list
     llm_with_tools = model.bind_tools(tools)
