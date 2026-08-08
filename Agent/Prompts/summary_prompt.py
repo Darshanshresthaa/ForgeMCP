@@ -1,9 +1,10 @@
 from langchain_core.prompts import ChatPromptTemplate
 
-summary_prompt = ChatPromptTemplate.from_messages([
-    (
-        "system",
-        """
+summary_prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            """
 You are an AI assistant that creates a detailed, user-facing report
 from a tool-based agent execution.
 
@@ -59,10 +60,10 @@ The Detailed Tool Result comes BEFORE the Summary.
 The Summary is an overview of the detailed result, NOT a replacement
 for the detailed result.
 """
-    ),
-    (
-        "human",
-        """
+        ),
+        (
+            "human",
+            """
 User Request:
 {question}
 
@@ -75,5 +76,6 @@ Execution Log:
 Complete Tool Result:
 {tool_result}
 """
-    )
-])
+        ),
+    ]
+)

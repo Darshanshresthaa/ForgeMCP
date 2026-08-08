@@ -5,9 +5,11 @@ import uuid
 from langchain_core.messages import HumanMessage
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
-from Agent.service import get_mcp_server
+from Agent.service import get_mcp_server, get_db_uri
 from Agent.nodes import set_tools
-from Agent.graph import compile_graph, run_graph
+from Agent.graph import compiled_graph_with_postgres, run_graph
+
+
 
 
 async def main():
@@ -16,16 +18,17 @@ async def main():
 
     set_tools(tools)  #passing list of tools
 
-    graph = compile_graph()
-
     config = {"configurable": {"thread_id": str(uuid.uuid4())}}
 
-    while True:
-        question = input("\nYou: ").strip()
+   
+    async with compiled_graph_with_postgres(get_db_uri()) as graph:
 
-        if question.lower() in {"end", "exit", "quit"}:
-            print(
-                """
+        while True:
+            question = input("\nYou: ").strip()
+
+            if question.lower() in {"end", "exit", "quit"}:
+                print(
+                    """
 ============================================================
 
 Thank you for using ForgeMCP.
@@ -50,33 +53,33 @@ Goodbye, and happy coding!
 
 ============================================================
 """
-            )
-            break
+                )
+                break
 
-        try:
-            result = await run_graph(
-                graph=graph,
-                question=question,
-                config=config,
-                messages=[HumanMessage(content=question)],
-            )
+            try:
+                result = await run_graph(
+                    graph=graph,
+                    question=question,
+                    config=config,
+                    messages=[HumanMessage(content=question)],
+                )
 
-            for k, v in result.items():
-                if k == "messages":
-                    continue
-                print(f"{k}: {v}")
+                for k, v in result.items():
+                    if k == "messages":
+                        continue
+                    print(f"{k}: {v}")
+                    print()
+
+                print()
+                print("=" * 90)
                 print()
 
-            print()
-            print("=" * 90)
-            print()
+            except KeyboardInterrupt:
+                print("\nSession interrupted by user.")
+                break
 
-        except KeyboardInterrupt:
-            print("\nSession interrupted by user.")
-            break
-
-        except Exception as e:
-            print(f"\nAn unexpected error occurred:\n{e}")
+            except Exception as e:
+                print(f"\nAn unexpected error occurred:\n{e}")
 
 
 if __name__ == "__main__":

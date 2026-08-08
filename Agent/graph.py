@@ -1,8 +1,11 @@
 """Graph wiring for the ForgeMCP LangGraph agent (converted from agent_copy.ipynb)."""
 
+from contextlib import asynccontextmanager
+
 from langchain_core.messages import BaseMessage
 from langgraph.graph import START, END, StateGraph
 from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.types import Command
 
 from Agent.state import State
@@ -104,10 +107,27 @@ def build_graph() -> StateGraph:
 
 
 def compile_graph():
-    """Build and compile the graph with an in-memory checkpointer."""
+
+    """Build and compile the graph with an in-memory checkpointer (quick local testing only;
+    history is lost on restart). Use compiled_graph_with_postgres() for real runs."""
+    
     builder = build_graph()
     memory = InMemorySaver()
     return builder.compile(checkpointer=memory)
+
+
+@asynccontextmanager
+async def compiled_graph_with_postgres(db_uri: str):
+    """Yield a graph compiled with a Postgres-backed checkpointer (persistent STM).
+
+    The Postgres connection stays open only for the lifetime of the `async with`
+    block, so keep the whole session (chat loop included) inside it.
+    """
+    builder = build_graph()
+
+    async with AsyncPostgresSaver.from_conn_string(db_uri) as memory:
+        await memory.setup()
+        yield builder.compile(checkpointer=memory)
 
 
 async def run_graph(

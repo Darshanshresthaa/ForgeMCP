@@ -16,25 +16,21 @@ def get_llm():
 
 
 def get_mcp_server():
-    # SERVERS = {
-    #     "ForgeMCP": {
-    #         "transport": "streamable_http",
-    #         "url": "https://gitserver-production.up.railway.app/mcp",
-    #         "headers": {
-    #             "Authorization": f"Bearer {os.getenv('MCP_AUTH_TOKEN')}"
-    #         },
-    #     }
-    # }
-
     SERVERS = {
-    "ForgeMCP": {
-        "transport": "streamable_http",
-        "url": "https://git-server-xsj9.onrender.com/mcp",
-        "headers": {
-            "Authorization": "Bearer KUm725H1HOhChd0Wkclg1UVQMtqU4w4D16fgzTmQEq8"
+        "ForgeMCP": {
+            "transport": "streamable_http",
+            "url": "https://git-server-xsj9.onrender.com/mcp",
+            "headers": {
+                "Authorization": f"Bearer {os.getenv('MCP_AUTH_TOKEN')}"
+            },
         }
     }
-}
-
 
     return SERVERS
+
+
+def get_db_uri() -> str:
+
+    """Postgres connection string used for the LangGraph checkpointer (STM)."""
+
+    return os.getenv("DB_URI")
