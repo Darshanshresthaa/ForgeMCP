@@ -323,29 +323,25 @@ def update_task_node(state: State):
 
 
 def summary_node(state: State):
-
     """Summarize the full execution plan and log into a final Markdown report."""
 
     chain = summary_prompt | model
 
     plan = ""
-    for i, task in enumerate(state.subtasks, start=1):
-        plan += f"{i}. {task.description}\n\n"
 
+    for task in state.subtasks:
+        plan += f"{task.description}\n"
 
-    answer = ""
-    for chunk in chain.stream(
+    response = chain.invoke(
         {
             "question": state.question,
             "plan": plan,
             "execution_log": "\n\n".join(state.execution_log),
-            'tool_result':state.tool_result,
-            
+            "tool_result": state.tool_result,
         }
-    ):
+    )
 
-        if chunk.conten:
-            answer +=chunk.content
+    answer = response.content
 
     return {
         "final_answer": answer,
