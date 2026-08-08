@@ -337,6 +337,8 @@ def summary_node(state: State):
             "question": state.question,
             "plan": plan,
             "execution_log": "\n\n".join(state.execution_log),
+            'tool_result':state.tool_result,
+            
         }
     )
 
