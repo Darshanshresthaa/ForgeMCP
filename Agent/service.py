@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from langchain_mistralai import ChatMistralAI
+import uuid
 
 load_dotenv()
 
@@ -34,3 +35,12 @@ def get_db_uri() -> str:
     """Postgres connection string used for the LangGraph checkpointer (STM)."""
 
     return os.getenv("DB_URI")
+
+
+
+def get_config():
+    return {
+        "configurable": {
+            "thread_id": str(uuid.uuid4())
+        }
+    }

@@ -332,7 +332,9 @@ def summary_node(state: State):
     for i, task in enumerate(state.subtasks, start=1):
         plan += f"{i}. {task.description}\n\n"
 
-    response = chain.invoke(
+
+    answer = ""
+    for chunk in chain.stream(
         {
             "question": state.question,
             "plan": plan,
@@ -340,9 +342,12 @@ def summary_node(state: State):
             'tool_result':state.tool_result,
             
         }
-    )
+    ):
+
+        if chunk.conten:
+            answer +=chunk.content
 
     return {
-        "final_answer": response.content,
-        "messages": [AIMessage(content=response.content)],
+        "final_answer": answer,
+        "messages": [AIMessage(content=answer)],
     }

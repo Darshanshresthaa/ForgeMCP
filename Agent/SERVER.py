@@ -9,6 +9,7 @@ from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from Agent.service import get_mcp_server, get_db_uri
 from Agent.nodes import set_tools
 from Agent.graph import  run_graph,build_graph
+from Agent.service import get_config
 
 
 
@@ -19,13 +20,13 @@ async def main():
 
     set_tools(tools)  #passing list of tools
 
-    config = {"configurable": {"thread_id": str(uuid.uuid4())}}
+    config = get_config()
 
 
 
 #    postgres cp
     async with AsyncPostgresSaver.from_conn_string(get_db_uri()) as memory:
-        
+
         await memory.setup()
         graph = build_graph().compile(
             checkpointer=memory
