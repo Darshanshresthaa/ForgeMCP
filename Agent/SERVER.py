@@ -4,10 +4,11 @@ import uuid
 
 from langchain_core.messages import HumanMessage
 from langchain_mcp_adapters.client import MultiServerMCPClient
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 from Agent.service import get_mcp_server, get_db_uri
 from Agent.nodes import set_tools
-from Agent.graph import compiled_graph_with_postgres, run_graph
+from Agent.graph import  run_graph,build_graph
 
 
 
@@ -20,8 +21,15 @@ async def main():
 
     config = {"configurable": {"thread_id": str(uuid.uuid4())}}
 
-   
-    async with compiled_graph_with_postgres(get_db_uri()) as graph:
+
+
+#    postgres cp
+    async with AsyncPostgresSaver.from_conn_string(get_db_uri()) as memory:
+        
+        await memory.setup()
+        graph = build_graph().compile(
+            checkpointer=memory
+        )
 
         while True:
             question = input("\nYou: ").strip()
