@@ -16,14 +16,25 @@ def get_llm():
 
 
 def get_mcp_server():
+    # SERVERS = {
+    #     "ForgeMCP": {
+    #         "transport": "streamable_http",
+    #         "url": "https://gitserver-production.up.railway.app/mcp",
+    #         "headers": {
+    #             "Authorization": f"Bearer {os.getenv('MCP_AUTH_TOKEN')}"
+    #         },
+    #     }
+    # }
+
     SERVERS = {
-        "ForgeMCP": {
-            "transport": "streamable_http",
-            "url": "https://gitserver-production.up.railway.app/mcp",
-            "headers": {
-                "Authorization": f"Bearer {os.getenv('MCP_AUTH_TOKEN')}"
-            },
+    "ForgeMCP": {
+        "transport": "streamable_http",
+        "url": "https://git-server-xsj9.onrender.com/mcp",
+        "headers": {
+            "Authorization": "Bearer KUm725H1HOhChd0Wkclg1UVQMtqU4w4D16fgzTmQEq8"
         }
     }
+}
+
 
     return SERVERS
