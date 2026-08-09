@@ -1,5 +1,5 @@
 
-
+import json
 from typing import Any
 
 from langchain_core.messages import AIMessage, BaseMessage
@@ -45,6 +45,74 @@ def balance_context_window(messages: list[BaseMessage]) -> list[BaseMessage]:
 
     return messages[2:]
 
+
+def _stringify(value: Any) -> str:
+    """
+    Render any value (dict, list, str, None, LangChain object, ...) as
+    readable text for a Markdown report. Falls back to str() for anything
+    that isn't JSON-serializable.
+    """
+    if value is None:
+        return "_(no output)_"
+
+    if isinstance(value, str):
+        return value.strip() or "_(empty)_"
+
+    try:
+        return json.dumps(value, indent=2, default=str, ensure_ascii=False)
+    except (TypeError, ValueError):
+        return str(value)
+
+
+def format_plan_checklist(subtasks: list) -> str:
+    """Short checklist view of the plan — one line per subtask with its status."""
+    if not subtasks:
+        return "_(no subtasks were planned)_"
+
+    marks = {"completed": "x", "failed": "!", "running": "~", "pending": " "}
+
+    lines = []
+    for i, task in enumerate(subtasks, start=1):
+        mark = marks.get(task.status, " ")
+        lines.append(f"{i}. [{mark}] {task.description}")
+
+    return "\n".join(lines)
+
+
+def format_execution_summary(subtasks: list) -> str:
+    """
+    Build one structured block per subtask containing exactly what was asked,
+    which tool (if any) was called, the exact input it was given, and the
+    exact output it produced. This is the single source of truth the
+    summary node uses — it is never based on only the *last* tool call.
+    """
+    if not subtasks:
+        return "_(no subtasks were executed)_"
+
+    blocks = []
+    for i, task in enumerate(subtasks, start=1):
+        lines = [
+            f"#### Task {i}: {task.description}",
+            f"- Status: {task.status}",
+        ]
+
+        if task.tool_name:
+            lines.append(f"- Tool Used: `{task.tool_name}`")
+
+        if task.tool_arguments:
+            lines.append("- Input:")
+            lines.append("```json")
+            lines.append(_stringify(task.tool_arguments))
+            lines.append("```")
+
+        lines.append("- Output:")
+        lines.append("```")
+        lines.append(_stringify(task.result))
+        lines.append("```")
+
+        blocks.append("\n".join(lines))
+
+    return "\n\n".join(blocks)
 
 
 def planner_node(state: State):
@@ -298,11 +366,21 @@ def tool_response_node(state: State):
 
 def update_task_node(state: State):
 
-    """Mark the current subtask as completed and advance to the next one."""
+    """
+    Mark the current subtask as completed and advance to the next one.
+
+    Records the exact tool that was used (if any), the exact input it was
+    called with, and the exact output it produced, directly onto the
+    TaskPlan — this is what makes the final summary able to report on
+    every subtask's input/output, not just the most recent one.
+    """
 
     tasks = state.subtasks.copy()
 
     task = tasks[state.current_task_index]
+
+    task.tool_name = state.tool_name
+    task.tool_arguments = state.tool_arguments or None
 
     if state.tool_result is not None:
         task.status = "completed"
@@ -319,25 +397,38 @@ def update_task_node(state: State):
         "subtasks": tasks,
         "current_task_index": next_index,
         "plan_completed": finished,
+        # Clear per-subtask scratch state so it can't leak into the next
+        # subtask's tool selection/safety/execution cycle.
+        "tool_name": None,
+        "tool_arguments": {},
+        "tool_result": None,
+        "tool_calls": [],
+        "tool_safety": None,
+        "requires_hitl": False,
+        "approved": False,
     }
 
 
 def summary_node(state: State):
-    """Summarize the full execution plan and log into a final Markdown report."""
+    """
+    Summarize the full execution plan into one final Markdown report.
+
+    Unlike a naive implementation that only has access to the *last*
+    tool_result, this reads the full per-task record (description, tool
+    used, exact input, exact output) straight off state.subtasks, so a
+    multi-subtask run is reported on completely rather than partially.
+    """
 
     chain = summary_prompt | model
 
-    plan = ""
-
-    for task in state.subtasks:
-        plan += f"{task.description}\n"
+    plan_checklist = format_plan_checklist(state.subtasks)
+    execution_summary = format_execution_summary(state.subtasks)
 
     response = chain.invoke(
         {
             "question": state.question,
-            "plan": plan,
-            "execution_log": "\n\n".join(state.execution_log),
-            "tool_result": state.tool_result,
+            "plan": plan_checklist,
+            "execution_summary": execution_summary,
         }
     )
 

@@ -46,9 +46,19 @@ class TaskPlan(BaseModel):
         description="Current execution status of the task."
     )
 
+    tool_name: str | None = Field(
+        default=None,
+        description="Name of the tool invoked for this task, if any."
+    )
+
+    tool_arguments: dict[str, Any] | None = Field(
+        default=None,
+        description="Exact arguments (input) the tool was called with, if any."
+    )
+
     result: Any | None = Field(
         default=None,
-        description="Result produced after executing the task."
+        description="Result (output) produced after executing the task."
     )
 
 

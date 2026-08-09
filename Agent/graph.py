@@ -56,13 +56,19 @@ def build_graph() -> StateGraph:
         },
     )
 
-    # Tool selection
+    # Tool selection.
+    # NOTE: "end" here means "no tool call was produced for this subtask",
+    # NOT "the whole run is finished". It must still flow through
+    # update_task_node (to record the result + advance the plan) and
+    # eventually through summary_node, so the user always gets one
+    # consistently formatted final report instead of a raw, unformatted
+    # node output.
     builder.add_conditional_edges(
         "normal_tools",
         nodes.tool_selection_router,
         {
             "safety_check": "tool_safety_node",
-            "end": END,
+            "end": "update_task_node",
         },
     )
 
@@ -76,13 +82,16 @@ def build_graph() -> StateGraph:
         },
     )
 
-    # HITL
+    # HITL. Same reasoning as above: "end" here means "this destructive
+    # action was rejected", not "stop the whole graph" — route through
+    # update_task_node/summary_node so a rejection is still reported
+    # inside the same formatted final report as everything else.
     builder.add_conditional_edges(
         "dangerous_tools",
         nodes.approval_routing,
         {
             "tool_execute": "execute_tools",
-            "end": END,
+            "end": "update_task_node",
         },
     )
 
