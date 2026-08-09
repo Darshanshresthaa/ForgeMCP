@@ -257,6 +257,8 @@ async def consume_stream(
         if not isinstance(chunk, dict):
             continue
 
+#   usually false for normal tools
+
         if "__interrupt__" in chunk:
 
             interrupted = True
@@ -515,7 +517,7 @@ for message in chat["messages"]:
         message["role"]
     ):
 
-        st.markdown(
+        st.write(
             message["content"]
         )
 
