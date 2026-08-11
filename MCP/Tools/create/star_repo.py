@@ -4,7 +4,7 @@ from MCP.server import mcp
 
 
 @mcp.tool
-def star_repo(
+def star_repository(
     repo_name: str,
     user_name: str | None = None,
 ):
@@ -45,7 +45,7 @@ def star_repo(
             repo_name = repo_name.strip("/")
 
 
-        github_put(
+        response = github_put(
             f"/user/starred/{user_name}/{repo_name}"
         )
 
@@ -58,6 +58,7 @@ def star_repo(
                 f"{user_name}/{repo_name}"
             ),
             "repository": f"{user_name}/{repo_name}",
+            "status_code":response.status_code,
             "url": repo_url,
         }
 
