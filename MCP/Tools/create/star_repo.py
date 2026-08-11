@@ -1,5 +1,5 @@
-from github_client import github_put
-from helper import get_authenticated_username
+from MCP.github_client import github_put
+from MCP.helper import get_authenticated_username
 from MCP.server import mcp
 
 

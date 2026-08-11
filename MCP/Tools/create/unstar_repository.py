@@ -1,6 +1,6 @@
-from github_client import git_delete
+from MCP.github_client import git_delete
 from MCP.server import mcp
-from helper import get_authenticated_username
+from MCP.helper import get_authenticated_username
 
 @mcp.tool
 
