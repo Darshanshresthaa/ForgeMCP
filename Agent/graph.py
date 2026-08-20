@@ -1,4 +1,3 @@
-"""Graph wiring for the ForgeMCP LangGraph agent (converted from agent_copy.ipynb)."""
 
 from contextlib import asynccontextmanager
 
@@ -36,7 +35,7 @@ def build_graph() -> StateGraph:
 
     builder.add_edge(START, "planner_node")
 
-    # Planner -> next subtask or straight to summary if nothing to do
+    
     builder.add_conditional_edges(
         "planner_node",
         nodes.planner_router,
@@ -46,7 +45,7 @@ def build_graph() -> StateGraph:
         },
     )
 
-    # Intent classifier if/else
+  
     builder.add_conditional_edges(
         "intent_classifier_node",
         nodes.router,
@@ -56,13 +55,6 @@ def build_graph() -> StateGraph:
         },
     )
 
-    # Tool selection.
-    # NOTE: "end" here means "no tool call was produced for this subtask",
-    # NOT "the whole run is finished". It must still flow through
-    # update_task_node (to record the result + advance the plan) and
-    # eventually through summary_node, so the user always gets one
-    # consistently formatted final report instead of a raw, unformatted
-    # node output.
     builder.add_conditional_edges(
         "normal_tools",
         nodes.tool_selection_router,
@@ -82,10 +74,7 @@ def build_graph() -> StateGraph:
         },
     )
 
-    # HITL. Same reasoning as above: "end" here means "this destructive
-    # action was rejected", not "stop the whole graph" — route through
-    # update_task_node/summary_node so a rejection is still reported
-    # inside the same formatted final report as everything else.
+  
     builder.add_conditional_edges(
         "dangerous_tools",
         nodes.approval_routing,
