@@ -16,6 +16,20 @@ def get_llm():
     return model
 
 
+
+# def get_llm():
+
+#     model = ChatOpenAI(
+#         model="qwen/qwen3.8-27b:free",
+#         api_key=os.getenv("OPENROUTER_API_KEY"),
+#         base_url="https://openrouter.ai/api/v1",
+#         temperature=0,
+#         streaming=True,
+#     )
+
+#     return model
+
+
 def get_mcp_server():
     SERVERS = {
         "ForgeMCP": {
