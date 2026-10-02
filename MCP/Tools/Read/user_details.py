@@ -30,14 +30,12 @@ def get_user_details(username: str | None = None):
             "following": profile["following"],
             "profile_url": profile["html_url"],
             "created_at": profile["created_at"],
-            "user_profile_type":profile['user_view_type'],
-            "profile_url":profile['html_url']
-
+            "user_profile_type": profile.get("user_view_type"),
         }
 
     except ValueError:
         raise
 
     except Exception as e:
-        raise RuntimeError(f"Failed to fetch profile for : '{username}'.")
+        raise RuntimeError(f"Failed to fetch profile for '{username}': {e}") from e
     

@@ -43,7 +43,7 @@ def get_repository_code(
             # If folder_path is provided,
             # only include files inside that folder
             if folder_path:
-                if not path.startswith(folder_path + "/"):
+                if not path.startswith(folder_path.strip("/") + "/"):
                     continue
 
 

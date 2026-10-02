@@ -46,16 +46,19 @@ def github_get(endpoint: str, params=None):
     return response.json()
 
 
-def github_put(endpoint: str, json: dict):
-    """Send PUT request to GitHub API."""
+def github_put(endpoint: str, json: dict | None = None):
+    """Send PUT request to GitHub API. Body is optional (e.g. starring a repo)."""
     headers = _auth_headers()
     response = _request("PUT", endpoint, headers=headers, json=json)
 
     if response.status_code == 404:
         raise ValueError("Resource not found.")
 
-    if response.status_code not in (200, 201):
+    if response.status_code not in (200, 201, 204):
         raise RuntimeError(f"GitHub API Error {response.status_code}: {response.text}")
+
+    if response.status_code == 204 or not response.content:
+        return {"status": "success"}
 
     return response.json()
 

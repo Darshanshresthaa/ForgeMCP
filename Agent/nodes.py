@@ -24,15 +24,19 @@ llm_with_tools = None
 MAX_MESSAGES = 20
 
 
+
 def set_tools(tool_list: list) -> None:
-
     """Inject the loaded MCP tools. Must be called before the graph is run."""
-
     global tools, llm_with_tools
+
     tools = tool_list
-    llm_with_tools = model.bind_tools(tools)
 
-
+    llm_with_tools = (
+        model.bind_tools(tools).with_retry(
+            stop_after_attempt=10,
+            wait_exponential_jitter=True,
+        )
+    )
 def balance_context_window(messages: list[BaseMessage]) -> list[BaseMessage]:
     """
     Keep the conversation history within the maximum context window.

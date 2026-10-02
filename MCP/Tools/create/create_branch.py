@@ -1,7 +1,7 @@
 from fastmcp import FastMCP
-from MCP.github_client import github_post,github_get
-import base64
+from MCP.github_client import github_post, github_get
 from MCP.server import mcp
+from MCP.helper import get_authenticated_username
 
 from uuid import uuid4
 
@@ -16,8 +16,11 @@ def create_branch(
     """  Create a new branch from an existing branch. on existing repo"""
 
 
-    if  branch_name is None:
+    if branch_name is None:
         branch_name = f"branch-{uuid4().hex[:5]}"
+
+    if username is None:
+        username = get_authenticated_username()
 
 
     try:

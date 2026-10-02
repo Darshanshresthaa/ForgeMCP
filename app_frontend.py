@@ -279,7 +279,7 @@ async def consume_stream(
 
      
                 section = (
-                    f""
+                    f"### "
                     f"{key.replace('_', ' ').title()}"
                     f"\n\n"
                     f"{value}"
@@ -467,7 +467,7 @@ with st.sidebar:
             == st.session_state.current_chat
         ):
 
-            title = "****" + title + "***"
+            title = "**" + title + "**"
 
         if st.button(
             title,

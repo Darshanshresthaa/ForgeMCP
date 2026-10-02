@@ -1,4 +1,5 @@
 from fastmcp import FastMCP
+import base64
 import subprocess
 import os
 from MCP.server import mcp
@@ -19,7 +20,7 @@ def _run(cmd, cwd):
 def push_local_to_github(
     local_path: str,
     repo_name: str,
-    username: str,
+    username: str | None = None,
     commit_message: str = "Initial commit",
     branch: str = "main",
     private: bool = True,
@@ -67,7 +68,10 @@ def push_local_to_github(
 
     remote_url = f"https://github.com/{username}/{repo_name}.git"
   
-    auth_header = f"AUTHORIZATION: bearer {GITHUB_TOKEN}"
+    auth_basic = base64.b64encode(
+        f"x-access-token:{GITHUB_TOKEN}".encode("utf-8")
+    ).decode("utf-8")
+    auth_header = f"AUTHORIZATION: basic {auth_basic}"
 
     try:
         if not os.path.isdir(os.path.join(local_path, ".git")):

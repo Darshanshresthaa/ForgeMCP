@@ -58,7 +58,6 @@ def star_repository(
                 f"{user_name}/{repo_name}"
             ),
             "repository": f"{user_name}/{repo_name}",
-            "status_code":response.status_code,
             "url": repo_url,
         }
 

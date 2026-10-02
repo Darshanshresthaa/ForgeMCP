@@ -1,33 +1,35 @@
 import os
 from dotenv import load_dotenv
 from langchain_mistralai import ChatMistralAI
+from langchain_openai import ChatOpenAI
+
 import uuid
 
 load_dotenv()
 
 
-def get_llm():
-    model = ChatMistralAI(
-        model="mistral-small-latest",
-        api_key=os.getenv("MISTRAL_API_KEY"),
-        streaming=True,
-    )
-
-    return model
-
-
-
 # def get_llm():
-
-#     model = ChatOpenAI(
-#         model="qwen/qwen3.8-27b:free",
-#         api_key=os.getenv("OPENROUTER_API_KEY"),
-#         base_url="https://openrouter.ai/api/v1",
-#         temperature=0,
+#     model = ChatMistralAI(
+#         model="mistral-small-latest",
+#         api_key=os.getenv("MISTRAL_API_KEY"),
 #         streaming=True,
 #     )
 
 #     return model
+
+
+
+
+def get_llm():
+
+    model = ChatOpenAI(
+        model="qwen/qwen3.8-27b:free",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        base_url="https://openrouter.ai/api/v1",
+        temperature=0,
+        streaming=True,
+    )
+    return model
 
 
 def get_mcp_server():

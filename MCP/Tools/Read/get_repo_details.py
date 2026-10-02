@@ -68,5 +68,5 @@ def get_repository(
 
     except Exception as e:
         raise RuntimeError(
-            f"Failed to fetch repository '{username}/{repo_name}'."
-        ) 
+            f"Failed to fetch repository '{username}/{repo_name}': {e}"
+        ) from e

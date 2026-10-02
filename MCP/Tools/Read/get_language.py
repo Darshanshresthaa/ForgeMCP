@@ -26,5 +26,5 @@ def get_langauge(
         raise
 
     except Exception as ex:
-        raise RuntimeError(f"Failed to get README: {ex}")
+        raise RuntimeError(f"Failed to get languages: {ex}")
 

@@ -45,7 +45,7 @@ def update_pull_request(
     try:
         pr = github_patch(
             f"/repos/{username}/{repo_name}/pulls/{pull_request_number}",
-            json=payload,
+            payload,
         )
 
         return {

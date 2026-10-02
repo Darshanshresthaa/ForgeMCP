@@ -18,6 +18,8 @@ from .repo_contributers import *
 
 from .search_repos import *
 from .user_details import *
+from .list_issues import *
+from .search_code import *
 
 
 

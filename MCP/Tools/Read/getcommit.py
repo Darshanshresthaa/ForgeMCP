@@ -15,7 +15,7 @@ def get_commit(
     """Get commit details."""
 
 
-    if  username in None:
+    if username is None:
         username = get_authenticated_username()
 
     try:
