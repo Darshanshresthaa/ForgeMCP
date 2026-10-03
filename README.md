@@ -37,7 +37,7 @@
 
 It is built from two cooperating parts:
 
-1. **An MCP (Model Context Protocol) server** (`MCP/`) — a [FastMCP](https://github.com/jlowin/fastmcp)-based server that wraps the GitHub REST API as ~34 individually-typed, individually-documented tools (list repos, get a README, create a branch, merge a PR, delete a repository, etc.), authenticated with a bearer token and deployable as a standalone HTTP service (currently on Render).
+1. **An MCP (Model Context Protocol) server** (`MCP/`) — a [FastMCP](https://github.com/jlowin/fastmcp)-based server that wraps the GitHub REST API as 41 individually-typed, individually-documented tools (list repos, get a README, search code, create a branch, open an issue, merge a PR, delete a repository, etc.), authenticated with a bearer token and deployable as a standalone HTTP service (currently on Render).
 2. **A LangGraph agent** (`Agent/`) — a conversational agent built on [LangGraph](https://github.com/langchain-ai/langgraph) that connects to the MCP server as a tool client (via `langchain-mcp-adapters`' `MultiServerMCPClient`), **breaks the user's request into an ordered plan of subtasks**, classifies each subtask's intent, selects a tool, classifies the *safety* of that tool call, pauses for human approval when the action is destructive, executes the tool, tracks task completion, and finally summarizes the whole run into one natural-language answer.
 
 **Why it exists:** talking to GitHub today means either using the `gh` CLI, clicking through the web UI, or hand-writing REST calls. ForgeMCP's goal is to make GitHub operable conversationally — "create a repo called `hello`, add a README, and push it" — as a single multi-step request the agent plans and executes on its own, while keeping a human explicitly in the loop before anything irreversible happens (deleting a repo, merging a PR, deleting a file). The MCP layer is also decoupled from the agent: because it is a standard MCP server, any MCP-compatible client (Claude Desktop, another LangGraph app, a different LLM entirely) can drive the same GitHub tools without touching the agent code at all.
@@ -53,18 +53,18 @@ It is built from two cooperating parts:
 
 ## Why This Was Built This Way
 
-- **MCP as the tool boundary, not a Python function call.** Exposing GitHub as an MCP server (rather than binding tool functions directly inside the LangGraph process) means the tool layer is a *protocol*, not an implementation detail. Any MCP-aware client can reuse the exact same 34 tools without importing any of this repo's agent code — this was a deliberate bet on reusability over convenience.
+- **MCP as the tool boundary, not a Python function call.** Exposing GitHub as an MCP server (rather than binding tool functions directly inside the LangGraph process) means the tool layer is a *protocol*, not an implementation detail. Any MCP-aware client can reuse the exact same 41 tools without importing any of this repo's agent code — this was a deliberate bet on reusability over convenience.
 - **A planner node instead of one-shot tool calling.** Early iterations routed every user message straight into a single tool-call LLM invocation, which works for "list my repos" but breaks down for compound requests like "create a repo, add a README, then push my local folder." Adding `planner_node` at the top of the graph turns that single request into an ordered list of `TaskPlan` subtasks, and the rest of the graph loops over them one at a time via `update_task_node` — so multi-step GitHub workflows are handled natively instead of requiring the user to issue one instruction per turn.
 - **HITL as a graph-level `interrupt()`, not a prompt instruction.** Telling the model "always ask before deleting" is a suggestion the model can ignore under the right phrasing. Implementing approval as a LangGraph `interrupt()` means the graph *cannot* proceed past a destructive tool call without an external `Command(resume=...)` — it's a structural guarantee, not a hope.
 - **Postgres checkpointing instead of in-memory state.** Both the CLI (`SERVER.py`) and the Streamlit UI (`app_frontend.py`) now compile the graph with `AsyncPostgresSaver`. This was a direct response to the earlier `InMemorySaver` limitation: a pending HITL approval, or an entire multi-turn thread, used to vanish on restart. Now it's durable, and `db_utils.py` gives a one-command way to wipe the checkpoint tables during development.
 - **Separate safety classification from tool selection.** Rather than trusting the tool-selecting LLM call to also self-police whether an action is dangerous, a second, independent LLM call (`tool_safety_node`) re-examines the chosen tool's name/description purely for destructiveness. Splitting these into two calls means a single prompt injection or reasoning slip in tool selection doesn't automatically bypass the safety gate too.
-- **Mistral over a larger frontier model.** `mistral-small-latest` was chosen for cost and latency — this is a conversational, tool-routing agent making several LLM calls per user turn (planner → router → tool-select → safety → response → summary), so a fast, cheap model that's "good enough" at structured output and tool-calling matters more here than raw reasoning depth.
+- **A small, cheap hosted model (via OpenRouter) over a larger frontier model.** `Agent/service.py` currently points `ChatOpenAI` at OpenRouter's OpenAI-compatible endpoint with a free-tier Qwen model (`temperature=0`, streaming). This is a conversational, tool-routing agent making several LLM calls per user turn (planner → router → tool-select → safety → response → summary), so a fast, cheap model that's "good enough" at structured output and tool-calling matters more here than raw reasoning depth. The earlier `ChatMistralAI` / `mistral-small-latest` setup is still in `service.py` as a commented-out alternative, and swapping providers only means editing `get_llm()`.
 
 ---
 
 ## Features
 
-- **~34 GitHub tools** spanning repository reads, commits, releases, branches, forks, contributors, file/repo creation, file/repo deletion, and the full pull-request lifecycle (create, list, get, update, merge, review, request reviewers).
+- **41 GitHub tools** spanning repository reads, commits, releases, branches (create/delete), forks, contributors, issues (list/create/comment), code and repo search, starring, file/repo creation, file/repo deletion, and the full pull-request lifecycle (create, list, get, update, merge, review, request reviewers).
 - **Automatic task planning** — `planner_node` decomposes a user request into an ordered list of subtasks *before* anything runs, so compound instructions ("create a repo, add a file, push it") are executed as a sequence rather than requiring one message per step.
 - **Per-subtask intent routing** — for each subtask, the agent decides whether it needs a GitHub action at all, or is just a question it can answer directly (e.g. "what is a pull request?").
 - **LLM-driven tool selection** — GitHub tools are bound directly to the chat model, which picks the tool and extracts its arguments from the subtask description in a single call.
@@ -76,7 +76,7 @@ It is built from two cooperating parts:
 - **Guarded network binding** — the server entrypoint (`demo.py`) refuses to bind to a non-loopback host unless an `MCP_AUTH_TOKEN` is set, to stop an accidentally-public, unauthenticated GitHub-mutating server.
 - **Local-repo tools alongside API tools** — `clone_repository` and `push_local_to_github` shell out to `git` directly, so the agent can also work with a local working copy, not just the GitHub API surface.
 - **Streamlit chat UI with multi-thread history** — `app_frontend.py` reconstructs past chat threads directly from Postgres checkpoints on load, and offers a sidebar New Chat button plus a Reset-DB button for wiping state during development.
-- **Context-window balancing** — `balance_context_window()` trims the oldest human/AI turn once the conversation exceeds 20 messages, so long-running threads don't grow the prompt unbounded.
+- **Context-window helper (partial)** — `balance_context_window()` drops the oldest two messages once a message list exceeds 20 entries. Today it is only applied to the incoming messages in `run_graph()` (CLI path), so it does not yet bound the checkpointed thread history — see [Drawbacks](#drawbacks--current-limitations).
 
 ---
 
@@ -101,7 +101,7 @@ ForgeMCP is deliberately split into two independently runnable pieces that only 
                          ▼
 ┌───────────────────────────── MCP Server Layer (MCP/) ──────────────────────────┐
 │                                                                                  │
-│   FastMCP server (server.py) ──▶ ~34 @mcp.tool functions                        │
+│   FastMCP server (server.py) ──▶ 41 @mcp.tool functions                         │
 │                                    (Tools/Read, create, Delete, Pull)            │
 │                                       │                                         │
 │                                       ▼                                        │
@@ -120,7 +120,7 @@ ForgeMCP is deliberately split into two independently runnable pieces that only 
 
 **MCP server (`MCP/`)**
 - `server.py` defines a single shared `FastMCP("ForgeMCP")` instance, optionally wrapped with `StaticTokenVerifier` auth if `MCP_AUTH_TOKEN` is set.
-- Every tool module imports that same `mcp` instance and registers itself with `@mcp.tool`, so all ~34 tools attach to one server regardless of which subpackage they live in.
+- Every tool module imports that same `mcp` instance and registers itself with `@mcp.tool`, so all 41 tools attach to one server regardless of which subpackage they live in.
 - `config.py` loads `GITHUB_TOKEN` and `MCP_AUTH_TOKEN` from `.env` and builds the base GitHub `HEADERS` dict.
 - `github_client.py` is the single HTTP boundary: `github_get`, `github_post`, `github_put`, `github_patch`, `git_delete`. Every write/delete call routes through `_auth_headers()`, which raises immediately if `GITHUB_TOKEN` is missing, so a misconfigured deployment fails fast rather than sending unauthenticated write requests.
 - `helper.py` provides `get_authenticated_username()`, used by nearly every tool as the default `username` when the caller doesn't supply one (i.e. "act on my own account").
@@ -129,8 +129,8 @@ ForgeMCP is deliberately split into two independently runnable pieces that only 
 **LangGraph agent (`Agent/`)**
 - `state.py` defines the graph's shared state as a Pydantic model (`State`), the multi-task planning schema (`TaskPlan`, `PlannerOutput`), and two structured-output schemas used by the LLM: `RouterDecision` (tool vs. llm) and `ToolSafetyDecision` (hitl vs. safe).
 - `nodes.py` implements every node function plus the routing functions used on conditional edges. Tools are injected at runtime via `set_tools()` once `MultiServerMCPClient.get_tools()` resolves — the module keeps `tools` and `llm_with_tools` as module-level state populated after startup.
-- `graph.py` wires the `StateGraph` (11 nodes, planner-first), and `run_graph()` loops on `__interrupt__` in the result to drive the HITL approval prompt for the CLI path.
-- `service.py` builds the Mistral chat model (`ChatMistralAI`, `mistral-small-latest`, streaming), the MCP server connection dict consumed by `MultiServerMCPClient`, the Postgres connection string (`get_db_uri()`), and a fresh per-session `thread_id` (`get_config()`).
+- `graph.py` wires the `StateGraph` (10 nodes, planner-first), and `run_graph()` loops on `__interrupt__` in the result to drive the HITL approval prompt for the CLI path.
+- `service.py` builds the chat model (`ChatOpenAI` pointed at OpenRouter via `OPENROUTER_API_KEY`, streaming; the `ChatMistralAI` version is commented out), the MCP server connection dict consumed by `MultiServerMCPClient`, the Postgres connection string (`get_db_uri()`), and a fresh per-session `thread_id` (`get_config()`).
 - `db_utils.py` provides `clear_postgres_data()` — truncates the `checkpoints`, `checkpoint_blobs`, and `checkpoint_writes` tables (used by the Streamlit "Reset-DB" button and available as a standalone script).
 - `SERVER.py` is the CLI entrypoint: it builds the MCP client, loads tools, injects them into `nodes`, opens an `AsyncPostgresSaver`, compiles the graph, and runs a `while True` input loop, resolving HITL interrupts via `input()`.
 - `Prompts/` holds one file per prompt (planner, router, llm-answer, tool-safety, tool-response, summary) — kept separate from the node logic so prompt text can be iterated on independently of graph wiring.
@@ -191,16 +191,16 @@ ForgeMCP/
 │   │   └── summary_prompt.py           # consolidates the full run into one answer
 │   ├── SERVER.py                   # CLI entrypoint (Postgres checkpointer, HITL resume)
 │   ├── db_utils.py                 # clear_postgres_data() — truncates checkpoint tables
-│   ├── graph.py                    # StateGraph wiring (planner-first, 11 nodes) + run_graph()
+│   ├── graph.py                    # StateGraph wiring (planner-first, 10 nodes) + run_graph()
 │   ├── nodes.py                    # All node + routing function implementations
 │   ├── service.py                  # LLM client, MCP connection, DB URI, per-session config
 │   └── state.py                    # Pydantic State, TaskPlan, PlannerOutput, RouterDecision, ToolSafetyDecision
 │
 ├── MCP/                            # FastMCP GitHub tool server
 │   ├── Tools/
-│   │   ├── Read/                   # 17 read-only tools (repos, commits, PRs metadata, etc.)
-│   │   ├── create/                 # 5 create/mutating tools (repo, file, branch, clone, push)
-│   │   ├── Delete/                 # 2 destructive tools (delete file, delete repo)
+│   │   ├── Read/                   # 19 read-only tools (repos, commits, issues, search, etc.)
+│   │   ├── create/                 # 9 create/mutating tools (repo, file, branch, issue, comment, star/unstar, clone, push)
+│   │   ├── Delete/                 # 3 destructive tools (delete file, branch, repo)
 │   │   └── Pull/                   # 10 pull-request lifecycle tools
 │   ├── config.py                   # Loads .env, builds GitHub API headers
 │   ├── github_client.py            # GET/POST/PUT/PATCH/DELETE wrapper around requests
@@ -215,9 +215,9 @@ ForgeMCP/
 ├── demo.py                         # MCP server process entrypoint (binds host/port, auth guard)
 ├── hello.py                        # Trivial smoke-test script
 ├── requirements.txt                # MCP server dependencies
-├── requirements_agent.txt          # Agent dependencies (LangGraph/LangChain/Mistral/psycopg/streamlit)
-├── Agent.ipynb / agent_copy.ipynb  # Notebook scratchpads the Agent/ package is iterated from
-└── .env                            # GITHUB_TOKEN, MCP_AUTH_TOKEN, MISTRAL_API_KEY, DB_URI (not committed)
+├── requirements_agent.txt          # Agent dependencies (LangGraph/LangChain/MCP adapters/psycopg); streamlit + langchain-openai are installed separately (see Installation)
+├── Agent.ipynb / agent_copy.ipynb  # Local notebook scratchpads (gitignored via *.ipynb, not part of the repo)
+└── .env                            # GITHUB_TOKEN, MCP_AUTH_TOKEN, OPENROUTER_API_KEY, DB_URI (not committed)
 ```
 
 ---
@@ -227,16 +227,16 @@ ForgeMCP/
 | Category | Technology | Role in ForgeMCP |
 |---|---|---|
 | Language | Python 3.11+ | Required — avoids an `interrupt()`/`get_config()` asyncio context bug present on older versions |
-| MCP server framework | [FastMCP](https://pypi.org/project/fastmcp/) | Exposes the ~34 GitHub tools as a standard MCP server with auth |
+| MCP server framework | [FastMCP](https://pypi.org/project/fastmcp/) | Exposes the 41 GitHub tools as a standard MCP server with auth |
 | Agent orchestration | [LangGraph](https://pypi.org/project/langgraph/) (+ `langgraph-checkpoint-postgres`) | Planner-driven multi-node StateGraph; Postgres-backed durable checkpointing |
 | LLM framework | [LangChain](https://pypi.org/project/langchain/) | Prompt templates, structured output, message types |
 | MCP↔LangChain bridge | `langchain-mcp-adapters` (`MultiServerMCPClient`) | Loads the MCP tool server's tools as native LangChain tools |
-| LLM provider | [Mistral AI](https://pypi.org/project/langchain-mistralai/) (`mistral-small-latest`) | Powers every LLM call in the graph — planning, routing, tool-selection, safety, response, summary |
+| LLM provider | [OpenRouter](https://openrouter.ai/) via `langchain-openai`'s `ChatOpenAI` (free-tier Qwen model; the `langchain-mistralai` / `mistral-small-latest` setup is kept commented out in `service.py`) | Powers every LLM call in the graph — planning, routing, tool-selection, safety, response, summary |
 | MCP protocol | `mcp` | Underlying protocol implementation used by both FastMCP and the adapters client |
 | Data validation | [Pydantic](https://pypi.org/project/pydantic/) | `State`, `TaskPlan`, `PlannerOutput`, `RouterDecision`, `ToolSafetyDecision` — all structured-output schemas |
 | HTTP client | `requests` | Every GitHub REST API call in `github_client.py` |
 | GitHub integration | GitHub REST API (`api.github.com`) | The actual surface being wrapped |
-| Config | `python-dotenv` | Loads `.env` locally (`GITHUB_TOKEN`, `MCP_AUTH_TOKEN`, `MISTRAL_API_KEY`, `DB_URI`) |
+| Config | `python-dotenv` | Loads `.env` locally (`GITHUB_TOKEN`, `MCP_AUTH_TOKEN`, `OPENROUTER_API_KEY`, `DB_URI`) |
 | **Persistence (short-term memory)** | **PostgreSQL** via `psycopg` + `psycopg-pool`, `langgraph-checkpoint-postgres` (`AsyncPostgresSaver`) | Durable, per-thread conversation state — active in both `SERVER.py` and `app_frontend.py` |
 | Frontend | [Streamlit](https://streamlit.io/) | `app_frontend.py` — chat UI, thread sidebar, HITL approval modal |
 | Notebook tooling | `ipykernel`, `jupyterlab` | `agent_copy.ipynb` used as an iterative scratchpad before migrating code into `Agent/` |
@@ -246,9 +246,9 @@ ForgeMCP/
 
 ## Available Tools
 
-All tools are registered via `@mcp.tool` and default `username` to the authenticated GitHub account when omitted.
+All tools are registered via `@mcp.tool` and, for repo-scoped tools, default `username` to the authenticated GitHub account when omitted. Tool names below are exactly as registered (including the `get_langauge` spelling), since that is what MCP clients and the agent see.
 
-### Read tools (17) — safe / read-only
+### Read tools (19) — safe / read-only
 
 | Tool | Purpose | Key Inputs | Output | Class |
 |---|---|---|---|---|
@@ -269,25 +269,32 @@ All tools are registered via `@mcp.tool` and default `username` to the authentic
 | `list_repositories` | List public repos owned by a user | `username?` | List of repo summaries | Safe |
 | `search_repos` | Global keyword search across GitHub repos | `query`, `limit` | Raw search result items | Safe |
 | `get_user_details` | Public GitHub user profile | `username?` | Profile dict | Safe |
+| `list_issues` | List issues of a repo (pull requests filtered out) | `repo_name`, `state`, `labels?`, `limit`, `page`, `username?` | List of `{number, title, state, author, labels, comments, created_at, url}` | Safe |
+| `search_code` | Search code across GitHub by keyword (needs `GITHUB_TOKEN`) | `query`, `repo?` (`owner/name`), `language?`, `limit` | `{total_count, results[]}` | Safe |
 
-### Create tools (5) — mutating
+### Create tools (9) — mutating
 
 | Tool | Purpose | Key Inputs | Output | Class |
 |---|---|---|---|---|
-| `create_repository` | Create a new empty remote repo | `repo_name`, `description`, `private`, `auto_init` | `{status, name, full_name, url}` | HITL (expected) |
+| `create_repository` | Create a new empty remote repo | `repo_name`, `description`, `private` (default `True`), `auto_init` | `{status, name, full_name, private, default_branch, url}` | HITL (expected) |
 | `create_file` | Create one file in a repo via the Contents API | `repo_name`, `path`, `content`, `message`, `branch`, `username?` | `{status, file, commit_sha, url}` | HITL (expected) |
 | `create_branch` | Create a branch from an existing branch | `repo_name`, `branch_name?`, `source_branch`, `username?` | `{status, branch, commit_sha, github_url}` | HITL (expected) |
 | `clone_repository` | `git clone` a repo to local disk | `repo_url`, `destination` | `{status, repository, location}` | Local-only; not a GitHub API mutation |
-| `push_local_to_github` | Push a local folder to GitHub (creates repo if needed, `git init`/commit/push) | `local_path`, `repo_name`, `username`, `commit_message`, `branch`, `private` | `{status, repository_created, repository, url}` | HITL (expected) |
+| `push_local_to_github` | Push a local folder to GitHub (creates repo if needed, `git init`/commit/push) | `local_path`, `repo_name`, `username?`, `commit_message`, `branch`, `private`, `description` | `{status, repository_created, repository, branch, committed, url}` | HITL (expected) |
+| `create_issue` | Open a new issue (optional labels/assignees) | `repo_name`, `title`, `body`, `labels?`, `assignees?`, `username?` | `{status, number, title, state, labels, url}` | HITL (expected) |
+| `add_issue_comment` | Comment on an issue or pull request | `repo_name`, `issue_number`, `body`, `username?` | `{status, comment_id, author, created_at, url}` | HITL (expected) |
+| `star_repository` | Star a repo (accepts a name or a full GitHub URL) | `repo_name`, `user_name?` | `{status, message, repository, url}` | HITL (expected) |
+| `unstar_git_repository` | Remove a star from a repo (accepts a name or a full GitHub URL) | `repo_name`, `user_name?` | `{status, message, repository, url}` | HITL (expected) |
 
-### Delete tools (2) — destructive
+### Delete tools (3) — destructive
 
 | Tool | Purpose | Key Inputs | Output | Class |
 |---|---|---|---|---|
 | `delete_file` | Delete a file from a repo | `repo_name`, `path`, `message`, `branch`, `confirm=True`, `username?` | `{status, file, branch}` | HITL |
 | `delete_repository` | Delete an entire repository | `repo_name`, `confirm=True`, `username?` | `{status, repository}` | HITL |
+| `delete_branch` | Delete a branch (refuses to delete the default branch) | `repo_name`, `branch_name`, `confirm=True`, `username?` | `{status, repository, deleted_branch}` | HITL |
 
-Both delete tools additionally require an explicit `confirm=True` argument at the tool level, on top of the agent's HITL approval — a second, independent guard against accidental deletion.
+All three delete tools additionally require an explicit `confirm=True` argument at the tool level (it defaults to `False`, so a call without it is rejected), on top of the agent's HITL approval — a second, independent guard against accidental deletion.
 
 ### Pull Request tools (10)
 
@@ -344,7 +351,7 @@ Routing functions (`planner_router`, `router`, `tool_selection_router`, `tool_sa
 
 ## Human In The Loop
 
-**Why it exists:** the agent can autonomously *select* any of the ~34 tools, including ones that delete repositories or merge pull requests. Tool selection is a single LLM call with no independent verification — so HITL exists as a second, structurally separate checkpoint that cannot be skipped by the LLM changing its mind, because it's implemented as a graph-level `interrupt()`, not a prompt instruction.
+**Why it exists:** the agent can autonomously *select* any of the 41 tools, including ones that delete repositories or merge pull requests. Tool selection is a single LLM call with no independent verification — so HITL exists as a second, structurally separate checkpoint that cannot be skipped by the LLM changing its mind, because it's implemented as a graph-level `interrupt()`, not a prompt instruction.
 
 **When it triggers:** whenever `tool_safety_node` classifies the selected tool as `"hitl"` — driven by the tool safety prompt's rules (anything that creates, updates, deletes, merges, or otherwise performs an irreversible/destructive action). The `dangerous_tools` node then calls `interrupt()` with the tool name, arguments, and the safety classifier's stated reason, and blocks until `Command(resume=...)` is sent back in with a truthy/falsy decision.
 
@@ -369,7 +376,7 @@ ForgeMCP currently has **short-term memory (STM)** fully implemented, and treats
 - Backed by `AsyncPostgresSaver` (`langgraph-checkpoint-postgres`), writing to the `checkpoints`, `checkpoint_blobs`, and `checkpoint_writes` tables.
 - Scoped **per thread** (`thread_id`) — every message, every intermediate `State` field (plan, current subtask, tool call, safety decision, approval, result), and every pending interrupt is checkpointed after each graph step.
 - Durable across restarts: killing and restarting either `SERVER.py` or `app_frontend.py` does not lose an in-progress conversation or a pending HITL approval.
-- `balance_context_window()` trims the oldest human/AI message pair once a thread exceeds 20 messages, so STM cost stays bounded within a single long-running thread.
+- `balance_context_window()` drops the oldest two messages once a message list exceeds 20 entries. Currently it is only called on the incoming messages in `run_graph()` (CLI) and not on the checkpointed history, so it does not yet cap thread growth (see Drawbacks).
 - `db_utils.clear_postgres_data()` gives a clean-slate reset for development/testing.
 
 This is **memory of the current conversation** — it does not generalize anything across separate threads or separate sessions.
@@ -397,7 +404,7 @@ Right now, two separate conversations (two different `thread_id`s) share *nothin
 - **Explicit, structured LLM outputs** — `RouterDecision`, `ToolSafetyDecision`, and `PlannerOutput` are Pydantic models used with `with_structured_output`, not string-parsed, so downstream routing logic works against typed fields.
 - **Two working front-ends on one shared agent.** The CLI and Streamlit UI both compile the exact same `build_graph()` — there is no logic fork between them, only presentation.
 - **Safe-by-default network posture** — `demo.py` actively refuses to bind to a non-loopback interface without an auth token configured, rather than silently running exposed and unauthenticated.
-- **Uniform tool error handling** — nearly every tool wraps its GitHub call in `try/except` and re-raises as a `RuntimeError` with context, giving the LLM a legible error message to reason about instead of a raw traceback.
+- **Uniform tool error handling** — most tools wrap their GitHub call in `try/except` and re-raise as a `RuntimeError` with context, giving the LLM a legible error message to reason about instead of a raw traceback (`create_pull_request` and `list_pull_requests` are the exceptions and let errors propagate as-is).
 - **MCP compatibility** — because the tool layer is a standard MCP server, it is usable by any MCP client, not just this specific LangGraph agent.
 
 ---
@@ -409,10 +416,14 @@ Right now, two separate conversations (two different `thread_id`s) share *nothin
 - **No dedicated parameter-extraction stage.** Tool selection and argument extraction happen in the same LLM call. If the model picks the right tool but a wrong or missing argument, there's no intermediate validation node to catch it — the bad arguments flow straight through the safety check into execution.
 - **Planner quality is entirely prompt-dependent.** There's no validation that the generated subtask list is actually correct, minimal, or correctly ordered — a poorly decomposed plan (too granular, missing a dependency, wrong order) will execute exactly as planned, wrong.
 - **Safety classification is inferred, not declarative.** Whether a tool requires HITL is decided per-call by an LLM reading the tool's `name` and `description` — it is not a static property of the tool itself. A subtly reworded tool docstring, or an ambiguous subtask description, can change the safety classification of the *same* tool between runs.
-- **A real bug in the `get_commit` Read tool:** a null-check written as `if username in None:` instead of `if username is None:` will raise a `TypeError` any time the tool is called without an explicit `username`, breaking the "default to authenticated user" convention every other Read tool relies on.
-- **No retry/backoff on GitHub API calls.** `github_client.py`'s request wrapper makes a single attempt with a flat timeout; a transient network blip or a GitHub rate-limit response (403/secondary rate limit) is surfaced directly as a `RuntimeError` rather than retried.
+- **Context trimming is not actually effective yet.** `balance_context_window()` is only called on the *incoming* message list in `run_graph()` (CLI), which always holds a single new message, and never in the Streamlit path. The full checkpointed history is still passed to the planner, router, safety and response prompts, so long threads grow the prompt unbounded.
+- **Dependency drift.** `requirements_agent.txt` does not list `streamlit` or `langchain-openai` (both are imported at runtime), and still lists `langchain-mistralai`, which is only used by commented-out code in `Agent/service.py`.
+- **Hard-coded deployment details.** The Render MCP URL and the OpenRouter free-tier model name are hard-coded in `Agent/service.py` rather than read from environment variables, so pointing the agent at a local server or a different model means editing code; free-tier models can also be rate-limited or withdrawn.
+- **Raw state output in both UIs.** The CLI and the Streamlit chat print every non-`messages` field of the graph state/updates (`final_answer`, `tool_arguments`, `subtasks`, ...) instead of just the final answer, which is useful for debugging but noisy for end users.
+- **No pagination on several list tools.** `list_repositories` (public repos only, first page), `get_branches`, `list_pull_request_commits/files/reviews` and `list_releases` do not expose a `page` parameter, so large result sets are silently truncated by GitHub's default page size.
+- **No retry/backoff on GitHub API calls.** `github_client.py`'s request wrapper makes a single attempt with a flat timeout; a transient network blip or a GitHub rate-limit response (403/secondary rate limit) is surfaced directly as a `RuntimeError` rather than retried. (Only the *LLM* calls made through `llm_with_tools` are retried, via `.with_retry(stop_after_attempt=10)`.)
 - **No rate-limit awareness.** GitHub's rate-limit headers (`X-RateLimit-Remaining`, etc.) are never inspected, so the agent has no way to warn the user or back off before hitting a 403.
-- **Inconsistent error handling across tools.** Some tools re-raise `ValueError` as-is; others wrap everything in `RuntimeError`; a few have thinner or copy-pasted error messages.
+- **Inconsistent error handling across tools.** Some tools re-raise `ValueError` as-is; others wrap everything in `RuntimeError`; `create_pull_request` and `list_pull_requests` have no `try/except` at all; and a 404 from `github_get` surfaces only as a generic "Resource not found." with no detail about which resource.
 - **Minimal input validation.** Several Read tools validate `limit`/`page` ranges, but most create/update/delete tools do no argument validation beyond what GitHub itself will reject.
 - **No automated test suite.** There are no test files in the repository; correctness currently depends on manual exercising through the notebooks and both UIs.
 - **Limited observability/logging.** There is no structured logging, tracing, or metrics anywhere in `MCP/` or `Agent/` — debugging a failed tool call or a misrouted subtask currently means reading stdout or Streamlit's console output.
@@ -433,7 +444,7 @@ Ordered roughly by expected impact:
 2. **Declarative, static tool-safety registry.** Tag each `@mcp.tool` function with a `safety="safe" | "hitl"` decorator argument at definition time, and have `tool_safety_node` read that tag directly (falling back to the LLM classifier only for tools that don't declare one). Removes the current risk of the same tool being classified differently across runs.
 3. **A dedicated parameter-extraction/validation node** between tool selection and safety check — re-validate extracted arguments against the actual tool's JSON schema (FastMCP/MCP tools expose one) before anything is classified for safety.
 4. **Plan validation/repair.** A lightweight check (or a second LLM pass) on `planner_node`'s output before execution begins — catching obviously malformed, circular, or missing-dependency plans early instead of discovering the problem mid-execution.
-5. **Fix the `get_commit` `in None` bug** (should be `is None`) so the tool respects the "default to authenticated user" convention used everywhere else.
+5. **Apply context trimming to the checkpointed history** (e.g. trim `state.messages` inside a node, or use LangChain's `trim_messages`) so `balance_context_window()` actually bounds prompt size, and move the MCP server URL and model name in `Agent/service.py` into environment variables.
 6. **Retry logic with backoff** in `github_client.py` for transient network errors and GitHub 403/secondary-rate-limit responses (e.g. `tenacity` or a small manual exponential backoff), rather than surfacing every transient failure as an immediate `RuntimeError`.
 7. **Rate-limit-aware requests** — read `X-RateLimit-Remaining`/`X-RateLimit-Reset` from GitHub responses and surface a clear message (or pre-emptively slow down) instead of failing opaquely mid-conversation.
 8. **Move credentials out of `.env` into a secrets manager** for the deployed environment, keeping `.env` for local development only.
@@ -441,9 +452,9 @@ Ordered roughly by expected impact:
 10. **Caching for cheap, frequently-repeated reads** — e.g. `get_repository`, `get_readme`, `list_repositories` — with a short TTL, to cut redundant GitHub API calls and rate-limit pressure within a single conversation.
 11. **Streaming improvements** — currently only `llm_answer_node` streams; `tool_response_node` and `summary_node` do not, so tool-driven and summarized responses feel less responsive than pure-Q&A ones.
 12. **Parallel tool execution where safe** — several Read subtasks (e.g. `get_repository` + `list_commits` + `get_languages` for an "overview" request) are independent and could fan out concurrently instead of the current one-tool-per-subtask model.
-13. **A pluggable tool-registry / plugin architecture** — letting new tool categories be dropped into `MCP/Tools/` and auto-discovered rather than requiring a manual `__init__.py` edit at three levels.
+13. **A pluggable tool-registry / plugin architecture** — letting new tool categories be dropped into `MCP/Tools/` and auto-discovered rather than requiring a manual import line in the category's `__init__.py`.
 14. **Authentication improvements** — replace the single static `MCP_AUTH_TOKEN` with per-client tokens/scopes, and consider scoping `GITHUB_TOKEN` per-organization or per-repo rather than one account-wide PAT.
-15. **Automated tests** — unit tests around `github_client.py`'s status-code handling and the LangGraph routing functions would catch regressions like the `get_commit` bug automatically.
+15. **Automated tests** — unit tests around `github_client.py`'s status-code handling and the LangGraph routing functions would catch regressions automatically.
 
 ---
 
@@ -465,7 +476,7 @@ Ordered roughly by expected impact:
 ### Prerequisites
 - Python 3.11+ (required — avoids an `interrupt()`/`get_config()` asyncio context bug on older versions)
 - A GitHub Personal Access Token with `repo` scope
-- A Mistral AI API key
+- An OpenRouter API key (or edit `get_llm()` in `Agent/service.py` to use another provider, e.g. the commented-out Mistral setup)
 - A PostgreSQL database (local or hosted) for the checkpointer
 
 ### 1. Clone and set up the environment
@@ -484,8 +495,11 @@ conda activate langchain_env311
 # MCP server only
 pip install -r requirements.txt
 
-# Agent + Streamlit UI (includes MCP server deps + LangGraph/LangChain/Mistral/Postgres/Streamlit)
+# Agent + Streamlit UI (adds LangGraph/LangChain/MCP adapters/Postgres drivers on top of the server deps)
 pip install -r requirements_agent.txt
+
+# Imported by the agent/UI but not listed in requirements_agent.txt:
+pip install streamlit langchain-openai
 ```
 
 ### 3. Configure environment variables
@@ -495,7 +509,7 @@ Create a `.env` file in the project root:
 ```env
 GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
 MCP_AUTH_TOKEN=your-mcp-bearer-token
-MISTRAL_API_KEY=your-mistral-api-key
+OPENROUTER_API_KEY=your-openrouter-api-key
 DB_URI=postgresql://user:password@host:port/dbname
 ```
 
@@ -507,11 +521,11 @@ DB_URI=postgresql://user:password@host:port/dbname
 python demo.py
 ```
 
-By default this binds `0.0.0.0:8000` (or `$PORT`/`$MCP_HOST` if set). If `MCP_HOST` resolves to anything other than `127.0.0.1`/`localhost`, `MCP_AUTH_TOKEN` **must** be set or the server refuses to start.
+By default this binds `0.0.0.0:8000` (or `$PORT`/`$MCP_HOST` if set). If `MCP_HOST` resolves to anything other than `127.0.0.1`/`localhost`, `MCP_AUTH_TOKEN` **must** be set or the server refuses to start — and since the default host is `0.0.0.0`, that means you need `MCP_AUTH_TOKEN` set for a plain `python demo.py` (or set `MCP_HOST=127.0.0.1` for a local-only, token-free run).
 
 ### 5. Point the agent at the server
 
-In `Agent/service.py`, `get_mcp_server()` currently points at a deployed Render URL. For local development, change the `url` to your local server, e.g. `http://127.0.0.1:8000/mcp`.
+In `Agent/service.py`, `get_mcp_server()` currently points at a deployed Render URL. For local development, change the `url` to your local server, e.g. `http://127.0.0.1:8000/mcp`. The agent sends `Authorization: Bearer <MCP_AUTH_TOKEN>` read from its own `.env`, so the same token must be set for both the server and the agent.
 
 ---
 
@@ -521,10 +535,10 @@ In `Agent/service.py`, `get_mcp_server()` currently points at a deployed Render 
 $ python -m Agent.SERVER
 
 You: what is a pull request?
-Assistant: A pull request (PR) is a way to propose changes to a repository...
+final_answer: A pull request (PR) is a way to propose changes to a repository...
 
 You: list my repositories
-Assistant: Here are your public repositories: ForgeMCP, RagBasic, ...
+final_answer: Here are your public repositories: ForgeMCP, RagBasic, ...
 
 You: create a repo called sandbox-test, add a README, then delete it
 [planner_node breaks this into 3 ordered subtasks]
@@ -535,8 +549,10 @@ The assistant wants to run 'delete_repository' with arguments
 Reason: Deleting a repository is an irreversible, destructive action.
 Approve? (y/n)
 (y/n): n
-Assistant: Action cancelled — not approved by user.
+final_answer: Action cancelled — not approved by user.
 ```
+
+> The CLI prints each non-`messages` field of the final graph state (`final_answer`, `subtasks`, ...), so real output is more verbose than shown here and the wording varies by model. Every state-changing subtask pauses for its own approval prompt.
 
 ---
 
@@ -567,6 +583,12 @@ streamlit run app_frontend.py
 - "Merge pull request #12 using squash"
 - "Request a review from octocat on pull request #12"
 - "Delete the file old_notes.md from ForgeMCP"
+- "List open issues on ForgeMCP"
+- "Open an issue titled 'Fix pagination' on ForgeMCP"
+- "Comment 'working on it' on issue #3 of ForgeMCP"
+- "Search GitHub code for 'StaticTokenVerifier' in Python"
+- "Star the repository https://github.com/jlowin/fastmcp"
+- "Delete the branch feature/logging from ForgeMCP"
 - "Delete the repository sandbox-test"
 - "Who are the contributors on ForgeMCP?"
 - "What is the difference between merge, squash, and rebase?" *(answered directly, no tool)*
@@ -579,7 +601,7 @@ streamlit run app_frontend.py
 
 **Architecture quality.** The two-layer split (MCP tool server / LangGraph agent) is the strongest architectural decision in the project: it's a genuine protocol boundary, not just a folder boundary, so the tool layer is reusable by any MCP client. Within the agent, adding a planner stage in front of the original classify → select → safety-check → [approve] → execute → respond pipeline is a real capability upgrade — it lets the agent handle compound requests instead of one tool call per user message, and the `update_task_node` / `planner_router` loop back is a clean way to iterate subtasks without a second graph. The weak point is still that individual decisions inside each subtask's cycle (tool selection, safety classification) are single unverified LLM calls with no schema or business-rule validation layer between them and execution.
 
-**Code organization.** Strong at the file level — prompts, nodes, graph wiring, and state are cleanly separated, and the `Tools/{Read,create,Delete,Pull}` split by intent is easy to navigate. Weaker at the package level: inconsistent casing (`create` and `Delete` vs. `Read`/`Pull`), a couple of clearly notebook-era filenames that suggest the code hasn't had a full cleanup pass since being extracted from the original notebooks, and `SERVER.py` (Agent) vs. `server.py` (MCP) is a genuinely confusing near-duplicate filename across two packages that both get imported.
+**Code organization.** Strong at the file level — prompts, nodes, graph wiring, and state are cleanly separated, and the `Tools/{Read,create,Delete,Pull}` split by intent is easy to navigate. Weaker at the package level: inconsistent casing (`create/` is lowercase while `Read/`, `Delete/` and `Pull/` are capitalized), several typo'd filenames and names that suggest the code hasn't had a full cleanup pass (`getpull_reqyest.py`, `suvmit_pr_review.py`, `get_latest_relese.py`, `repo_contributers.py`, `comparecomits.py`, `grpah_img.png`, the `get_langauge` tool name, and `unstar_git_repository` vs. `star_repository`), and `SERVER.py` (Agent) vs. `server.py` (MCP) is a genuinely confusing near-duplicate filename across two packages that both get imported.
 
 **Maintainability.** Reasonable. Because every tool follows the same shape (validate → call `github_client` → shape the return dict → catch and re-raise), a new contributor can read three existing tools and correctly write a fourth without additional documentation. The main maintainability risk is that safety classification lives in prompt text rather than code — a well-intentioned edit to `tool_safety_node_prompt.py`'s wording could silently change which tools require approval, with no test to catch it. The planner's correctness has the same soft dependency on prompt wording.
 
